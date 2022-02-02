@@ -23,12 +23,5 @@ Further inquire client to narrow down the scope of the problem and clarify requi
 * Should people be able to be kicked out of a chat room?  
 * Are employees only communicating locally or countrywide?
 
-# Design
-### Centralized Messaging System (LAN)  
-![alt text](https://github.com/MattBcsueb/CS401-Project-References/blob/main/LANimg.png)
-
-### Example: Sending a message from PC2 to Laptop0
-![alt text](https://github.com/MattBcsueb/CS401-Project-References/blob/main/LANsetup.gif)
-
 # References
 [Review on sockets & Java example](https://github.com/MattBcsueb/CS401-Project-References/blob/main/SocketRef.png)
