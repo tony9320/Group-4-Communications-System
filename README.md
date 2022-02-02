@@ -30,3 +30,5 @@ Further inquire client to narrow down the scope of the problem and clarify requi
 ### Example: Sending a message from PC2 to Laptop0
 ![alt text](https://github.com/MattBcsueb/CS401-Project-References/blob/main/LANsetup.gif)
 
+# References
+[Review on sockets & Java example](https://github.com/MattBcsueb/CS401-Project-References/blob/main/SocketRef.png)
