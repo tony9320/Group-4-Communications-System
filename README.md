@@ -1,4 +1,4 @@
-# Group-4-Communication-Network  
+# Group-4-Communications-System  
 Client requests a text-based chat system for their company employees to communicate.  
 # Features
 #### Required
