@@ -22,6 +22,7 @@ Further inquire client to narrow down the scope of the problem and clarify requi
 * Should profanity be censored?  
 * Should people be able to be kicked out of a chat room?  
 * Are employees only communicating locally or countrywide?
+* How long should messages be stored?
 
 # References
 [Review on sockets & Java example](https://github.com/MattBcsueb/CS401-Project-References/blob/main/SocketRef.png)
