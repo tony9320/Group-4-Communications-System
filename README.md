@@ -15,14 +15,3 @@ Client requests a text-based chat system for their company employees to communic
 # Planning
 Further inquire client to narrow down the scope of the problem and clarify requirements.  
 
-### Questions to ask:  
-* Who should be allowed to view the recorded messages?  
-* Should there be a notification system if messages were not successfully sent/received?  
-* Should all chat rooms be strictly public (anyone can join)?  
-* Should profanity be censored?  
-* Should people be able to be kicked out of a chat room?  
-* Are employees only communicating locally or countrywide?
-* How long should messages be stored?
-
-# References
-[Review on sockets & Java example](https://github.com/MattBcsueb/CS401-Project-References/blob/main/SocketRef.png)
