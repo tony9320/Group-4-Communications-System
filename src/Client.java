@@ -8,15 +8,12 @@ class Client {
 			OutputStream outputStream = socket.getOutputStream();
 			ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
 
-			// Send a login Message
-			Message message = new Message("login", "Undefined", "login message");
-			objectOutputStream.writeObject(message);
-
-            // Checking if the User is authenticated
-            InputStream inputStream = socket.getInputStream();
+            		// This is how you would get a Message back during the authentication process
+            		InputStream inputStream = socket.getInputStream();
 			ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
 			
-			// Used to get the Message back from the server
+			// Starts the thread used to retrieve Messages after authentication
+			// Notice how I am sending the original input stream to the thread
 			ReceiveMessages inputThread = new ReceiveMessages(socket, objectInputStream);
 			//new Thread(inputThread).start();			
 			
