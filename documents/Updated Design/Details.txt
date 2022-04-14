@@ -35,7 +35,7 @@ MESSAGE TYPES:
      at my Server example, you will see that I made the input it's own class which is ran as a separate thread. FOR THIS YOU MUST PASS THE 
      ObjectInputStream OBJECT YOU CREATED AT THE START OF THE CLIENT PROGRAM TO THE CONSTRUCTOR OTHERWISE IT WILL STOP WORKING. 
 
-   - You may then prompt for the User's choice between joinChatRoom(), createChatRoom(), and changePassword(). 
+   - You may then prompt for the User's choice between the following functions
 
      -----> createChatRoom() should send the Server a Message of type CREATECHATROOM with the text attribute being the desired name of the Chat Room.
             If the name is taken, the Server will return the Message with status FAILED if the name was taken, or VERIFIED if the name was free and
