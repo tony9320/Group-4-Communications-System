@@ -7,12 +7,11 @@ MESSAGE TYPES:
    - JOINCHATROOM
    - CREATECHATROOM
    - CHANGEPASSWORD
-   - NEWUSER
-   - NEWSUPERVISOR
    - DISPLAYUSERS
    - RETRIEVELOGS (Will only succeed if the requesting User is actually a Supervisor)
    - DELETEUSER (Will only succeed if the requesting User is actually a Supervisor)
    - CREATEUSER (Will only succeed if the requesting User is actually a Supervisor)
+   - CREATESUPERVISOR (Will only succeed if the requesting User is actually a Supervisor)
    - VERIFIED (Set by Server only!)
    - FAILED (Set by Server only!)
 
