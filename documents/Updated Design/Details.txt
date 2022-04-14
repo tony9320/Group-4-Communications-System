@@ -8,8 +8,9 @@ MESSAGE TYPES:
    - CREATECHATROOM
    - CHANGEPASSWORD
    - DISPLAYUSERS
+   - REMOVECHATUSER
    - RETRIEVELOGS (Will only succeed if the requesting User is actually a Supervisor)
-   - DELETEUSER (Will only succeed if the requesting User is actually a Supervisor)
+   - DELETEACCOUNT (Will only succeed if the requesting User is actually a Supervisor)
    - CREATEUSER (Will only succeed if the requesting User is actually a Supervisor)
    - CREATESUPERVISOR (Will only succeed if the requesting User is actually a Supervisor)
    - VERIFIED (Set by Server only!)
