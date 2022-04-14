@@ -17,7 +17,8 @@ MESSAGE TYPES:
    - FAILED (Set by Server only!)
 
 1. Supervisor
-   - Must be a subclass of User
+   - ***ERROR IN UML*** change Boolean Supervisor to Boolean isSupervisor
+   - Must be a subclass of User and the default value for isSupervisor should be true
    - The special privileges of the Supervisor are accessed through the Client, so these functions should not belong to a Supervisor object.
      We will just check if the requesting User is actually a Supervisor or not when processing the requests for logs, password changes,
      creating new Users, and deleting Users.
@@ -66,7 +67,7 @@ MESSAGE TYPES:
             work if the requesting person is a Supervisor, so you will either get the Message back with status FAILED (it was a User requesting the change)
             or with status VERIFIED (it was a Supervisor). You can output failure/success messages accordingly.
 
-     -----> createUser() is just like above but of type CREATEUSER. You will get it back as FAILED or VERIFIED accordingly. 
+     -----> createUser() is just like above but of type CREATEUSER or CREATESUPERVISOR. You will get it back as FAILED or VERIFIED accordingly. 
 
            
      
