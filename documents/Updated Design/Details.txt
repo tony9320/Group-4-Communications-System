@@ -8,11 +8,16 @@ MESSAGE TYPES:
    - CREATECHATROOM
    - CHANGEPASSWORD
    - DISPLAYUSERS
-   - REMOVECHATUSER
+   
+   - REMOVECHATUSER (Will only succeed if the requesting User owns the Chat Room)
+   - LOCKCHAT (Will only succeed if the requesting User owns the Chat Room)
+   - UNLOCKCHAT (Will only succeed if the requesting User owns the Chat Room)
+   
    - RETRIEVELOGS (Will only succeed if the requesting User is actually a Supervisor)
    - DELETEACCOUNT (Will only succeed if the requesting User is actually a Supervisor)
    - CREATEUSER (Will only succeed if the requesting User is actually a Supervisor)
    - CREATESUPERVISOR (Will only succeed if the requesting User is actually a Supervisor)
+   
    - VERIFIED (Set by Server only!)
    - FAILED (Set by Server only!)
 
