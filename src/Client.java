@@ -18,14 +18,30 @@ class Client {
 			
 			// Used to get the Message back from the server
 			ReceiveMessages inputThread = new ReceiveMessages(socket, objectInputStream);
-			//new Thread(inputThread).start();			
+			new Thread(inputThread).start();			
 			
 			// Allows the user to send text Messages to the server until they decide to log out
 			while (!socket.isClosed()) {
 				try {
-					
+
 					// This is where Messages are SENT (and functions such as displayUsers() would be called)
 
+				    message = new Message("CHATROOM", "Undefined", "login message");
+					objectOutputStream.writeObject(message);
+					 message = new Message("DISPLAYCHATROOMS", "Undefined", "login message");
+					objectOutputStream.writeObject(message);
+					 message = new Message("JOINCHATROOM", "Undefined", "login message");
+					objectOutputStream.writeObject(message);
+					 message = new Message("CHANGEPASSWORD", "Undefined", "login message");
+					objectOutputStream.writeObject(message);
+					 message = new Message("CREATEUSER", "Undefined", "login message");
+					objectOutputStream.writeObject(message);
+					 message = new Message("CREATESUPERVISOR", "Undefined", "login message");
+					objectOutputStream.writeObject(message);
+					 message = new Message("DISPLAYUSERS", "Undefined", "login message");
+					objectOutputStream.writeObject(message);
+					 message = new Message("DISPLAYUSERS", "Undefined", "login message");
+					objectOutputStream.writeObject(message);
                 }
 				catch (Exception e) {
 					System.out.println("An exception was thrown");
