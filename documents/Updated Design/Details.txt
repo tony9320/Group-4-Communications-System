@@ -7,17 +7,21 @@ MESSAGE TYPES:
    - JOINCHATROOM
    - CREATECHATROOM
    - CHANGEPASSWORD
-   - NEWUSER
-   - NEWSUPERVISOR
    - DISPLAYUSERS
+   
+   - REMOVECHATUSER (Will only succeed if the requesting User owns the Chat Room)
+   - LOCKCHAT (Will only succeed if the requesting User owns the Chat Room)
+   - UNLOCKCHAT (Will only succeed if the requesting User owns the Chat Room)
+   
    - RETRIEVELOGS (Will only succeed if the requesting User is actually a Supervisor)
-   - DELETEUSER (Will only succeed if the requesting User is actually a Supervisor)
+   - DELETEACCOUNT (Will only succeed if the requesting User is actually a Supervisor)
    - CREATEUSER (Will only succeed if the requesting User is actually a Supervisor)
+   - CREATESUPERVISOR (Will only succeed if the requesting User is actually a Supervisor)
+   
    - VERIFIED (Set by Server only!)
    - FAILED (Set by Server only!)
 
 1. Supervisor
-   - ***ERROR IN UML*** change Boolean Supervisor to Boolean isSupervisor
    - Must be a subclass of User and the default value for isSupervisor should be true
    - The special privileges of the Supervisor are accessed through the Client, so these functions should not belong to a Supervisor object.
      We will just check if the requesting User is actually a Supervisor or not when processing the requests for logs, password changes,
@@ -41,7 +45,6 @@ MESSAGE TYPES:
      -----> createChatRoom() should send the Server a Message of type CREATECHATROOM with the text attribute being the desired name of the Chat Room.
             If the name is taken, the Server will return the Message with status FAILED if the name was taken, or VERIFIED if the name was free and
             the room was successfully created. This process will automatically set the User's activeChatRoom to this ChatRoom.
-
 
      -----> joinChatRoom() should send the Server a Message of type DISPLAYCHATROOMS. The Message's text does not matter. The Server will return
             the same Message, but with an array of Strings (where each String is the name of the ChatRoom). I believe an array is the right
@@ -68,24 +71,27 @@ MESSAGE TYPES:
             or with status VERIFIED (it was a Supervisor). You can output failure/success messages accordingly.
 
      -----> createUser() is just like above but of type CREATEUSER or CREATESUPERVISOR. You will get it back as FAILED or VERIFIED accordingly. 
+     
+     -----> setChatLock()/setChatUnlock() send Messages of type LOCKCHAT/UNLOCKCHAT. It will only do something if the requesting User is the ChatRoom owner.
 
            
      
 
 4. ChatRoom
-   - I would ignore the inviteUser() function until the very end.
-   - I am not yet sure how we should implement setChatLock/Unlock() using GUI features. Text commands like ::lockchat ::unlockchat would be easy but I'm not
-     sure if he would like us using text commands for a GUI program. The same applies for removeUser(). 
-   - Other functions:
+   - I would ignore the inviteUser() function until the very end. 
+   
+   *** If a Supervisor deletes a User, that User's object will be set to null. If one of these Users is in ChatRooms, there is a risk of trying
+       to dereference null references. Leaving these in is kinda shitty, but we could just do that but check for chatUsers.get(i) == null any
+       time you are dealing with the ArrayList of chat users ***
+   - Functions:
      -----> Constructors: INPUT: 1 User, 1 Message.
                           You should take in a single User, add them to the ArrayList chatUsers, and then set the ChatRoom's userHost to this user. You also
                           set the roomName attribute to the text attribute of the Message (read above in joinChatRoom() to see how this works). 
      
-     -----> addUser() you add the User to the ArrayList. This ChatRoom will be the User's ChatRoom at this moment (the Server does this), but that may change
-            over time. Thankfully, the ArrayList contains references to users, which we will leverage in sendMessage().
+     -----> addUser() you add the User to the ArrayList. 
 
      -----> sendMessage() gives you the Message of type CHATROOM and the User who sent it. You must then send this message to the entire ArrayList of the ChatRoom's Users
-            BUT ONLY THE ONES WHOSE activeChatRoom IS THIS CHANNEL. Once a Message gets to the ChatRoom, it will have a User connected to it. You can use Message.getUser().getactuveC
+            BUT ONLY THE ONES WHOSE activeChatRoom IS THIS CHANNEL. Once a Message gets to the ChatRoom, it will have a User connected to it. You can use Message.getUser().getactiveChat
             If they are the same, you send the Message to the ObjectOutputStream of that User (userName.getObjectOutputStream()). The Message should be of type
             CHATROOM (so that the Client knows it needs to be outputting it to the User). The Client deals with extracting the text from this Message. 
 	
@@ -99,14 +105,15 @@ MESSAGE TYPES:
             but I envision this as being read into a String with good formatting, setting the text attribute of a Message of type CHATROOM to this String, and then sending it
             to the User. This should also be used for Users who are logging back in, but I do not yet see the best way to do this. 
      
-
+    -----> setChatLock/Unlock() should just check if the Message.getSender() == the room's owner
 
 
 
 5. Message
    - Default attribute for status, sender, and roomList attributes should be null. The Server will set these.
-   - The only constructor should be one which takes in the type and text.
+   - One constructor should be one which takes in the type and text. Another should accept status only.
    - Notice that setType is private --- the type MUST be set when the Message is created and it must never change.
+   - setRoomList() function is used to send the list of rooms to the Client. It may be scrapped later, idk.
 
   
 
