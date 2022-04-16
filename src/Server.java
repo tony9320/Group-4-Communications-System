@@ -6,6 +6,7 @@ class Server {
 	public static void main(String[] args) {
 		ServerSocket server = null;
 		try {
+			// Load User file into ArrayList, save new Users to it ---> update the file
 			server = new ServerSocket(1234);
 			server.setReuseAddress(true);
 	
@@ -45,20 +46,23 @@ class Server {
 		private static ArrayList<Socket> allUserSockets = new ArrayList<Socket>();
 		private static ArrayList<ObjectOutputStream> allOutputStreams = new ArrayList<ObjectOutputStream>();
 		private static ArrayList<User> allUsers = new ArrayList<User>();
-	//  private static ArrayList<ChatRoom> allChatRooms = new ArrayList<ChatRoom>();
+	    private static ArrayList<ChatRoom> allChatRooms = new ArrayList<ChatRoom>();
+
+		private static int userNum = 1; // Use this to generate new Users with different names before User class is created
 
 		private String username;
-		private static int number = 0;
 		
 		// Constructor
 		public ClientHandler(Socket socket) {
 			this.clientSocket = socket;
 			System.out.println("New thread created");
-			number++;
-			System.out.println("Number of connect clients: " + number);
-			username = "User" + number;
+			userNum++;
+			System.out.println("Number of connect clients: " + userNum);
+			username = "User" + userNum;
 			allUserSockets.add(socket);
 			System.out.println(username + " " + socket);
+
+			username = "User " + userNum++;
 		}
 	
 		public void run() {
@@ -169,7 +173,8 @@ class Server {
 			                               messageFromClient.setStatus("VERIFIED");
 			                               objectOutputStream.writeObject(messageFromClient);
 			                               
-			                               // Should we write this User to the file now?
+			                               // Write the User to the file now
+										   saveNewUser( CONTENT OF THE NEW USER)
 
 			                               return;
 			                               
@@ -301,6 +306,22 @@ class Server {
 			catch (Exception e) {
 				System.out.println("There was an exception");
 			}
+		}
+
+		public void saveUser() {
+
+
+			return;
+		}
+
+		public void loadUsers() {
+			
+
+			return;
+		}
+
+		public void saveMessage() {
+
 		}
 	}
 }
