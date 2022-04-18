@@ -24,6 +24,7 @@ MESSAGE TYPES:
 
 2. User
    - The User object needs to know its activeChatroom so that the ChatRooms know whether or not to actually send a Message to that User
+   - **** There needs to be a password getter ****
 
 
 3. Client
