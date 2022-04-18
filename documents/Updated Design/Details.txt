@@ -24,6 +24,7 @@ MESSAGE TYPES:
 
 2. User
    - The User object needs to know its activeChatroom so that the ChatRooms know whether or not to actually send a Message to that User
+   - **** There needs to be a password getter ****
 
 
 3. Client
@@ -68,6 +69,8 @@ MESSAGE TYPES:
 
      -----> createUser() is just like above but of type CREATEUSER. You will get it back as FAILED or VERIFIED accordingly. 
 
+
+
            
      
 
@@ -84,9 +87,10 @@ MESSAGE TYPES:
             over time. Thankfully, the ArrayList contains references to users, which we will leverage in sendMessage().
 
      -----> sendMessage() gives you the Message of type CHATROOM and the User who sent it. You must then send this message to the entire ArrayList of the ChatRoom's Users
-            BUT ONLY THE ONES WHOSE activeChatRoom IS THIS CHANNEL. Once a Message gets to the ChatRoom, it will have a User connected to it. You can use Message.getUser().getactuveC
-            If they are the same, you send the Message to the ObjectOutputStream of that User (userName.getObjectOutputStream()). The Message should be of type
-            CHATROOM (so that the Client knows it needs to be outputting it to the User). The Client deals with extracting the text from this Message. 
+            BUT ONLY THE ONES WHOSE activeChatRoom IS THIS CHANNEL. This is done by calling getActiveChannel() on each User in the ArrayList.
+            If they are the same, you send the Message to the ObjectOutputStream of that User (getObjectOutputStream()). The Message should be of type
+            CHATROOM (so that the Client knows it needs to be outputting it to the User - but the Server does this for you). 
+            The Client deals with extracting the text from this Message. 
 	
             ** The Server will add the sending User's name to the front of text of the Message, so ultimately the Client will output something like 'Owen: hello everyone' **
 

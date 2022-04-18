@@ -1,8 +1,3 @@
-<<<<<<< Updated upstream
-public class Server {
-    
-}
-=======
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
@@ -431,4 +426,3 @@ class Server {
 		}
 	}
 }
->>>>>>> Stashed changes
