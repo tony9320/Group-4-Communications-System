@@ -48,7 +48,7 @@ class Server {
 		private static ArrayList<User> allUsers = new ArrayList<User>();
 	    private static ArrayList<ChatRoom> allChatRooms = new ArrayList<ChatRoom>();
 
-		private static int userNum = 1; // Use this to generate new Users with different names before User class is created
+		private static int userNum = 0;
 
 		private String username;
 		
@@ -62,7 +62,13 @@ class Server {
 			allUserSockets.add(socket);
 			System.out.println(username + " " + socket);
 
+			if (userNum == 0) {
+				loadUsers(allUsers);
+			}
+
 			username = "User " + userNum++;
+
+			
 		}
 	
 		public void run() {
@@ -76,12 +82,66 @@ class Server {
 				OutputStream outputStream = clientSocket.getOutputStream();
 				ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
 				allOutputStreams.add(objectOutputStream);
+
+				Message loginMessage;
+				loginMessage = (Message) objectInputStream.readObject();
+
+
+				String[] values = loginMessage.getText().split("/");
+
+				// Attempting to authenticate based on the first login attempt
+				for (int i = 0; i < allUsers.size(); i++) {
+					if (allUsers.get(i).getName.equals(values[0])) {
+						if (allUsers.get(i).getPassword().equals(values[1])) {
+							localUser = allUsers.get(i);
+							localUser.setObjectOutputStream(objectOutputStream);
+							authenticated = true;
+
+							loginMessage.setStatus("VERIFIED");
+							objectOutputStream.writeObject(loginMessage);
+						}
+						else {
+							loginMessage.setStatus("FAILED");
+							loginMessage.setText("Invalid password");
+							objectOutputStream.writeObject(loginMessage);
+							break;
+						}
+					}
+					else {
+						loginMessage.setStatus("FAILED");
+						loginMessage.setText("User not found.");
+						objectOutputStream.writeObject(loginMessage);
+					}
+				}
 				
 				// **** USER AUTHENTICATION, CREATE THE USER OBJECT AND SET ITS ATTRIBUTES ****
-				//while (!authenticated) {
-					// Get LOGIN message and try to authenticate
-					// If it is a User, authenticated = true, send Message back with status VERIFIED
-			    //}
+				while (!authenticated) {
+					loginMessage = (Message) objectInputStream.readObject();
+
+					for (int i = 0; i < allUsers.size(); i++) {
+						if (allUsers.get(i).getName.equals(values[0])) {
+							if (allUsers.get(i).getPassword().equals(values[1])) {
+								localUser = allUsers.get(i);
+								localUser.setObjectOutputStream(objectOutputStream);
+								authenticated = true;
+	
+								loginMessage.setStatus("VERIFIED");
+								objectOutputStream.writeObject(loginMessage);
+							}
+							else {
+								loginMessage.setStatus("FAILED");
+								loginMessage.setText("Invalid password");
+								objectOutputStream.writeObject(loginMessage);
+								break;
+							}
+						}
+						else {
+							loginMessage.setStatus("FAILED");
+							loginMessage.setText("User not found.");
+							objectOutputStream.writeObject(loginMessage);
+						}
+					}
+			    }
 				
 				// 
 		
@@ -203,12 +263,14 @@ class Server {
 			                                   }
 			            
 			            					// The User does not already exist and can be added
-			                                allUsers.add(new User(name, password, null, null); // They do not yet have an output stream or active chat room
+											User newUser = new UserUser(name, password, null, null);
+			                                allUsers.add(newUser); // They do not yet have an output stream or active chat room
 			                                messageFromClient.setStatus("VERIFIED");
 			                                objectOutputStream.writeObject(messageFromClient);
 			            
 			            				
 			            				  // Should we write this User to the file now?
+										  saveUser(newUser);
 			            */
 			            	 System.out.println("TYPE: CREATESUPERVISOR");
 		                     break;
@@ -308,20 +370,59 @@ class Server {
 			}
 		}
 
-		public void saveUser() {
-
-
+		public void saveUser(User newUser) {
+			FileWriter writer = new FileWriter("src\\fileio\\users", true);
+			
+			writer.write("\nU/");
+			writer.write( newUser.getName() + "/");
+			writer.write(newUser.getPassword());
+			
+			writer.close();
 			return;
 		}
 
-		public void loadUsers() {
-			
+		public void loadUsers(ArrayList<User> allUsers) {
+			try {
+				BufferedReader reader;
+				User newUser;
 
+				reader = new BufferedReader(new FileReader("src\\fileio\\users"));
+				String line = reader.readLine();
+				
+				String[] values = line.split("/");
+				if (values[0].equals("S")) {
+					newUser = new Supervisor(values[1], values[2]);
+				}
+				else {
+					newUser = new User(values[1], values[2]);
+				}
+
+				line = reader.readLine();
+			
+				while (line != null) {	
+					values = line.split("/");
+					if (values[0].equals("S")) {
+						newUser = new Supervisor(values[1], values[2]);
+					}
+					else {
+						newUser = new User(values[1], values[2]);
+					}
+	
+					line = reader.readLine();
+				}
+					reader.close();
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+			}
+			
 			return;
 		}
 
 		public void saveMessage() {
-
+			
+		
+	
 		}
 	}
 }
