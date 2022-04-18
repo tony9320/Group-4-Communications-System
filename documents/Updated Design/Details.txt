@@ -7,12 +7,11 @@ MESSAGE TYPES:
    - JOINCHATROOM
    - CREATECHATROOM
    - CHANGEPASSWORD
-   - NEWUSER
-   - NEWSUPERVISOR
    - DISPLAYUSERS
    - RETRIEVELOGS (Will only succeed if the requesting User is actually a Supervisor)
    - DELETEUSER (Will only succeed if the requesting User is actually a Supervisor)
    - CREATEUSER (Will only succeed if the requesting User is actually a Supervisor)
+   - CREATESUPERVISOR (Will only succeed if the requesting User is actually a Supervisor)
    - VERIFIED (Set by Server only!)
    - FAILED (Set by Server only!)
 
@@ -67,7 +66,9 @@ MESSAGE TYPES:
             work if the requesting person is a Supervisor, so you will either get the Message back with status FAILED (it was a User requesting the change)
             or with status VERIFIED (it was a Supervisor). You can output failure/success messages accordingly.
 
-     -----> createUser() is just like above but of type CREATEUSER. You will get it back as FAILED or VERIFIED accordingly. 
+     -----> createUser() is just like above but of type CREATEUSER or CREATESUPERVISOR. You will get it back as FAILED or VERIFIED accordingly.
+            The Message's text attribute should read "usersname maybealastname/password" so that I can use a delimiter of / to parse it. Whether
+	    you are trying to make a User or Supervisor depends on the type attribute.
 
 
 
