@@ -8,10 +8,14 @@ MESSAGE TYPES:
    - CREATECHATROOM
    - CHANGEPASSWORD
    - DISPLAYUSERS
+   - SETCHATLOCK
+   - SETCHATUNLOCK
+   
    - RETRIEVELOGS (Will only succeed if the requesting User is actually a Supervisor)
    - DELETEUSER (Will only succeed if the requesting User is actually a Supervisor)
    - CREATEUSER (Will only succeed if the requesting User is actually a Supervisor)
    - CREATESUPERVISOR (Will only succeed if the requesting User is actually a Supervisor)
+   
    - VERIFIED (Set by Server only!)
    - FAILED (Set by Server only!)
 
@@ -41,13 +45,13 @@ MESSAGE TYPES:
             If the name is taken, the Server will return the Message with status FAILED if the name was taken, or VERIFIED if the name was free and
             the room was successfully created. This process will automatically set the User's activeChatRoom to this ChatRoom.
 
-
      -----> joinChatRoom() should send the Server a Message of type DISPLAYCHATROOMS. The Message's text does not matter. The Server will return
-            the same Message, but with an array of Strings (where each String is the name of the ChatRoom). I believe an array is the right
-            choice for this because it will allow us to have one button for each option when the time comes to implement the GUI part of this.
-            Until then, you should prompt the User for the name of the ChatRoom they wish to enter, put this as the text attribute of a Message
-	    of type JOINCHATROOM, and send it. (Then, wait for the Message back with type VERIFIED). The User should now be free to type whatever,
-            but you need to send these as CHATROOM Messages. ***The Server will then set the User's activeChatRoom to this ChatRoom***
+            the same Message, but with an array of Strings (where each String is the name of the ChatRoom.. ). These will be in the userList
+	    attribute of the returned Message. I believe an array is the right choice for this because it will allow us to have one button for 
+	    each option when the time comes to implement the GUI part of this. Until then, you should prompt the User for the name of the ChatRoom 
+	    they wish to enter, put this as the text attribute of a Message of type JOINCHATROOM, and send it. (Then, wait for the Message back with 
+	    type VERIFIED). The User should now be free to type whatever, but you need to send these as CHATROOM Messages. 
+	    ***The Server will then set the User's activeChatRoom to this ChatRoom***
 
 	    Since the User is now in a ChatRoom, you will start receiving Messages sent to that ChatRoom. This means you are receiving Messages of 
             type CHATROOM.
@@ -60,7 +64,7 @@ MESSAGE TYPES:
 	    to set the text attribute to the desired password (we will not authenticate the old password - it will just be overwritten).
 
      -----> displayUsers() should send the Server a Message of type DISPLAYUSERS, and the Message will be returned with a list of all User's names as
-            the Message's text attribute.
+            the Message's userList attribute.
 
      -----> deleteUser() should send the Server a Message of type DELETEUSER and a text attribute of the name of the User to be deleted. This will only
             work if the requesting person is a Supervisor, so you will either get the Message back with status FAILED (it was a User requesting the change)
@@ -69,6 +73,10 @@ MESSAGE TYPES:
      -----> createUser() is just like above but of type CREATEUSER or CREATESUPERVISOR. You will get it back as FAILED or VERIFIED accordingly.
             The Message's text attribute should read "usersname maybealastname/password" so that I can use a delimiter of / to parse it. Whether
 	    you are trying to make a User or Supervisor depends on the type attribute.
+	    
+     -----> setChatLock() is a Message with any text and of type SETCHATLOCK. If the requesting User is the chat owner, the ChatRoom will be locked
+     
+     -----> setChatUnlock() is a Message with any text and of type SETCHATLOCK. If the requesting User is the chat owner, the ChatRoom will be unlocked
 
 
 
@@ -109,7 +117,7 @@ MESSAGE TYPES:
 
 5. Message
    - Default attribute for status, sender, and roomList attributes should be null. The Server will set these.
-   - The only constructor should be one which takes in the type and text.
+   - Constructors: 1 with type and text parameters, 1 with just status parameter, 1 with no parameters.
    - Notice that setType is private --- the type MUST be set when the Message is created and it must never change.
 
   
