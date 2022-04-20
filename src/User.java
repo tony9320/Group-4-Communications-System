@@ -1,11 +1,17 @@
-import java.io.*;
+import java.io.ObjectOutputStream;
 
 public class User {
 	protected String name;
 	protected String password;
 	protected ObjectOutputStream outputStream;
 	protected String activeChatRoom;
-	
+
+	public User() {}
+
+	public User(String name, String password) {
+		this.name = name;
+		this.password = password;
+	}	
 	
 	public void changePassword(String password) {
 		this.password = password;
