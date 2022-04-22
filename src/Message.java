@@ -5,7 +5,7 @@ public class Message implements Serializable {
     protected String type;
     protected String text;
     protected String status;
-    protected User sender;
+    protected String sender;
     protected Date timeStamp; 
     protected String[] roomList;
 
@@ -31,7 +31,7 @@ public class Message implements Serializable {
     }
     
     // Constructor for sending messages to a chatroom
-    public Message(String type, String text, User sender, String[] roomList) {
+    public Message(String type, String text, String sender, String[] roomList) {
     	setType(type);
     	setText(text);
     	setSender(sender);
@@ -48,7 +48,7 @@ public class Message implements Serializable {
     	this.timeStamp = currentDate;
     }
 
-    private void setType(String type){
+    public void setType(String type){
     	this.type = type;
     }
 
@@ -60,7 +60,7 @@ public class Message implements Serializable {
     	this.text = text;
     }
     
-    public void setSender(User sender) {
+    public void setSender(String sender) {
     	this.sender = sender;
     }
     
@@ -80,7 +80,7 @@ public class Message implements Serializable {
     	return text;
     }
     
-    public User getSender() {
+    public String getSender() {
     	return sender;
     }
     
