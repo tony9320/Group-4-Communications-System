@@ -1,76 +1,71 @@
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 
 class ChatRoom {
-    private String roomName;								//the unique name of the Chatroom
-    private ArrayList<User> activeChatUsers;				//Array of Users actively logged into current chat
-    private ArrayList<User> particpatingChatUsers;			//Array of all Users particpating in chat
-    private Boolean chatLocked;								//Boolean if chat is locked
-    private User host;										//host of the chat
-    private File chatFile;									//File holding Chat Messages
+    private String roomName;
+    private ArrayList<User> chatUsers;
+	private HashMap<String, ObjectOutputStream> outputStreams;
+    private Boolean chatLocked;
+    private User host;
+    private File chatFile;
     
-    public ChatRoom(User user, Message message) {			//Type DISPLAYCHATROOM Message
-    	this.activeChatUsers = new ArrayList<User>();		//create the array
-    	this.activeChatUsers.add(user);						//user is added to List of activeUsers
-    	this.particpatingChatUsers = new ArrayList<User>();	//create the array
-    	this.particpatingChatUsers.add(user);				//user is added to List of participatingUsers
-    	this.chatLocked = false;							//chat is created unlocked
-    	this.host = user;									//set host
-    	this.roomName = message.getText();					//set name of room
+    public ChatRoom(User user, Message message, ObjectOutputStream outputStream) {	//Type DISPLAYCHATROOM Message
+    	this.chatUsers = new ArrayList<User>();		//create the array
+    	this.chatUsers.add(user);					//user is added to List of Users
+    	this.chatLocked = false;					//chat is created unlocked
+    	this.host = user;							//set host
+    	this.roomName = message.getText();			//set name of room
     	this.chatFile = new File(roomName);
-    	try {
-			this.chatFile.createNewFile();					//create the file for the chatroom!
-		}//try 
-    	catch (IOException e) {
-			System.out.println("ERROR CREATING FILE");
-		}//catch
-    }//Chatroom()
 
-    public void addActiveUser(User user) {
+		outputStreams = new HashMap<String, ObjectOutputStream>();
+		outputStreams.put(host.getName(), outputStream);
+
+    	try {
+			this.chatFile.createNewFile();			//create the file for the chatroom!
+		} catch (IOException e) {
+			System.out.println("ERROR CREATING FILE");
+		}
+    }
+
+    public void addUser(User user, ObjectOutputStream objectOutputStream) {
     	boolean found = false;
     	
-    	for(int i = 0; i < this.activeChatUsers.size(); i++) {				//loop through all active users
-    		if(this.activeChatUsers.get(i).equals(user) &&					//user is in current chatroom
-    				!activeChatUsers.get(i).equals(null)) { 				//if present in list
-    			found = true;												//FOUND!
-    			reloadHistoryForUser(user);									//reload the messages
+    	for(int i = 0; i < this.chatUsers.size(); i++) {			//loop through all users
+    		if(this.chatUsers.get(i).equals(user)) { 				//if present in list
+    			found = true;										//FOUND!
+				outputStreams.replace(user.getName(), objectOutputStream);
+    			reloadHistoryForUser(user);
     			break;
     		}//if
     	}//for
     	
     	if(found == false) {												//if not found add to list
-    		this.activeChatUsers.add(user);
+    		this.chatUsers.add(user);
+			outputStreams.put(user.getName(), objectOutputStream);
     	}//if
-    }//addActiveUser()
-    
-    public void removeActiveUser(User user) {
-    	for(int i = 0; i < this.activeChatUsers.size(); i++) {				//loop through all active users
-    		if(this.activeChatUsers.get(i).equals(user) &&					//user is in current chatroom
-    				!activeChatUsers.get(i).equals(null)) { 				//if present in list
-    			this.activeChatUsers.remove(i);								//remove from list
-    			break;
-    		}//if
-    	}//for
-    }//removeActiveUser()
+    }//addUser()
 
-    public void sendMessage(Message message) {														//message type CHATROOM
+    public void sendMessage(Message message) {	//message type Chatroom
     	
-    	for(int i = 0; i < this.activeChatUsers.size(); i++) { 										//loop through all participating users
-    		if(activeChatUsers.get(i).getActiveChatRoom().equals(this.roomName) &&					//user is in current chatroom
-    				!activeChatUsers.get(i).equals(null)) {											//user is not null
+    	for(int i = 0; i < this.chatUsers.size(); i++) { 										// loop through all users
+    		if(chatUsers.get(i).getActiveChatRoom().equals(this.roomName) &&					//user is in current chatroom
+    				!chatUsers.get(i).equals(null)) {											//user is not null
     			try {
-    				ObjectOutputStream outStream = activeChatUsers.get(i).getObjectOutputStream();	//get Output Stream
-					outStream.writeObject(message);													//send message through stream
+    				ObjectOutputStream outStream = outputStreams.get(chatUsers.get(i).getName());	//get Output Stream
+					outStream.writeObject(message);												//send message through stream
 				}//try 
     			catch (IOException e) {
-					System.out.println("ERROR SENDING MESSAGE to User: " + activeChatUsers.get(i).getName());
+					System.out.println("ERROR SENDING MESSAGE to User: " + chatUsers.get(i).getName());
+					e.printStackTrace();
 				}//catch
     		}//if
     	}//for
     	
-    	logMessage(message); 		//MESSAGE HAS BEEN SENT TO ACTIVE USERS
-    }//sendMessage()
+    	//MESSAGE HAS BEEN SENT TO ACTIVE USERS
+        logMessage(message); 
+    }
 
     public String getRoomName() {
         return this.roomName;
@@ -94,22 +89,24 @@ class ChatRoom {
         }//catch
     }//logMessage()
 
-    private void reloadHistoryForUser(User user) {     
+    private void reloadHistoryForUser(User user) {    
             // Creating an object of BufferedReader class
             BufferedReader br;
-            String all="";
-            String segment="";
-            ObjectOutputStream userStream = user.getObjectOutputStream();
-            
-            try {
-				br = new BufferedReader(new FileReader(this.chatFile));  			//tell what file to read from
-				
+			ObjectOutputStream os = outputStreams.get(user.getName());   
+			try {
+				br = new BufferedReader(new FileReader(this.chatFile));  //tell what file to read from
+	            String st;
+				String longString = "";
 	            try {
-					while ((segment = br.readLine()) != null) { 					//read until end of file
-						all += segment+"\n";
+					while ((st = br.readLine()) != null) { //read until end of file
+					  longString = longString + st + "\n";
+						        //print line by line 
+					    //TODO PRINT ONTO GUI
 					}//while
-					Message newMessage = new Message("CHATROOM","Undefined",all);	//new CHATROOM type message 
-					userStream.writeObject(newMessage);								//send down users output Stream
+
+					Message message = new Message();
+					message.setText(longString);
+					os.writeObject(message);
 				}//try
 	            catch (IOException e) {
 					System.out.println("ERROR: READING FROM FILE");
@@ -139,30 +136,5 @@ class ChatRoom {
     		//CHAT REMAINS THE SAME
     	}
     }
-    
-    public void addParticpatingUser(User user) {
-    	boolean found = false;
-    	
-    	for(int i = 0; i < this.particpatingChatUsers.size(); i++) {			//loop through all users
-    		if(this.particpatingChatUsers.get(i).equals(user)&&					//user is in current chatroom
-    				!particpatingChatUsers.get(i).equals(null)) { 				//if present in list
-    			found = true;													//FOUND A DUPLICATE!
-    			break;
-    		}//if
-    	}//for
-    	
-    	if(found == false && this.chatLocked == false) {												//if not found add to list && if chat is not locked
-    		this.particpatingChatUsers.add(user);
-    	}//if
-    }//addParticipatingUser()
-    
-    public void removeParticpatingUser(User user) {
-    	for(int i = 0; i < this.particpatingChatUsers.size(); i++) {
-    		if(this.particpatingChatUsers.get(i).equals(user) && this.chatLocked == false &&					//user is in current chatroom
-    				!particpatingChatUsers.get(i).equals(null)) { 												//if present in list
-    			this.particpatingChatUsers.remove(i);
-    			break;
-    		}//if
-    	}//for
-    }//removeParticipatingUser()
+
 }//class
