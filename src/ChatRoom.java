@@ -1,21 +1,27 @@
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 
 class ChatRoom {
     private String roomName;
     private ArrayList<User> chatUsers;
+	private HashMap<String, ObjectOutputStream> outputStreams;
     private Boolean chatLocked;
     private User host;
     private File chatFile;
     
-    public ChatRoom(User user, Message message) {	//Type DISPLAYCHATROOM Message
+    public ChatRoom(User user, Message message, ObjectOutputStream outputStream) {	//Type DISPLAYCHATROOM Message
     	this.chatUsers = new ArrayList<User>();		//create the array
     	this.chatUsers.add(user);					//user is added to List of Users
     	this.chatLocked = false;					//chat is created unlocked
     	this.host = user;							//set host
     	this.roomName = message.getText();			//set name of room
     	this.chatFile = new File(roomName);
+
+		outputStreams = new HashMap<String, ObjectOutputStream>();
+		outputStreams.put(host.getName(), outputStream);
+
     	try {
 			this.chatFile.createNewFile();			//create the file for the chatroom!
 		} catch (IOException e) {
@@ -23,12 +29,13 @@ class ChatRoom {
 		}
     }
 
-    public void addUser(User user) {
+    public void addUser(User user, ObjectOutputStream objectOutputStream) {
     	boolean found = false;
     	
     	for(int i = 0; i < this.chatUsers.size(); i++) {			//loop through all users
     		if(this.chatUsers.get(i).equals(user)) { 				//if present in list
     			found = true;										//FOUND!
+				outputStreams.replace(user.getName(), objectOutputStream);
     			reloadHistoryForUser(user);
     			break;
     		}//if
@@ -36,6 +43,7 @@ class ChatRoom {
     	
     	if(found == false) {												//if not found add to list
     		this.chatUsers.add(user);
+			outputStreams.put(user.getName(), objectOutputStream);
     	}//if
     }//addUser()
 
@@ -45,11 +53,12 @@ class ChatRoom {
     		if(chatUsers.get(i).getActiveChatRoom().equals(this.roomName) &&					//user is in current chatroom
     				!chatUsers.get(i).equals(null)) {											//user is not null
     			try {
-    				ObjectOutputStream outStream = chatUsers.get(i).getObjectOutputStream();	//get Output Stream
+    				ObjectOutputStream outStream = outputStreams.get(chatUsers.get(i).getName());	//get Output Stream
 					outStream.writeObject(message);												//send message through stream
 				}//try 
     			catch (IOException e) {
 					System.out.println("ERROR SENDING MESSAGE to User: " + chatUsers.get(i).getName());
+					e.printStackTrace();
 				}//catch
     		}//if
     	}//for
@@ -83,14 +92,21 @@ class ChatRoom {
     private void reloadHistoryForUser(User user) {    
             // Creating an object of BufferedReader class
             BufferedReader br;
+			ObjectOutputStream os = outputStreams.get(user.getName());   
 			try {
 				br = new BufferedReader(new FileReader(this.chatFile));  //tell what file to read from
 	            String st;
+				String longString = "";
 	            try {
 					while ((st = br.readLine()) != null) { //read until end of file
-					    System.out.println(st);            //print line by line 
+					  longString = longString + st + "\n";
+						        //print line by line 
 					    //TODO PRINT ONTO GUI
 					}//while
+
+					Message message = new Message();
+					message.setText(longString);
+					os.writeObject(message);
 				}//try
 	            catch (IOException e) {
 					System.out.println("ERROR: READING FROM FILE");
