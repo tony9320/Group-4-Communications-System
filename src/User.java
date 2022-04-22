@@ -1,6 +1,7 @@
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 
-public class User {
+public class User implements Serializable {
 	protected String name;
 	protected String password;
 	protected ObjectOutputStream outputStream;
@@ -11,6 +12,8 @@ public class User {
 	public User(String name, String password) {
 		this.name = name;
 		this.password = password;
+		outputStream = null;
+		activeChatRoom = null;
 	}	
 	
 	public void changePassword(String password) {
@@ -31,19 +34,19 @@ public class User {
 	
 	
 	public ObjectOutputStream getObjectOutputStream() {
-		return this.outputStream;
+		return outputStream;
 	}
 	
 	public String getActiveChatRoom() {
-		return this.activeChatRoom;
+		return activeChatRoom;
 	}
 	
 	public String getName() {
-		return this.name;
+		return name;
 	}
 	
 	public String getPassword() {
-		return this.password;
+		return password;
 	}
 
 }
