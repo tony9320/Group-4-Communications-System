@@ -34,13 +34,9 @@ class Client {
 				}
 				else {
 					System.out.println("NOT VERIFIED");
-					login = messageScanner.nextLine();
-					loginMessage = new Message("LOGIN", login);
-					objectOutputStream.writeObject(loginMessage);
 				}
 
 				if (!authenticated) {
-					loginMessage = (Message) objectInputStream.readObject();
 					while (!loginMessage.getStatus().equals("VERIFIED")) {
 						login = messageScanner.nextLine();
 						loginMessage = new Message("LOGIN", login);
