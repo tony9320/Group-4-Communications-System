@@ -46,10 +46,10 @@ class Server {
 		private boolean authenticated = false;
 		private File chatHistory = new File("logs");
 		
-		private static ArrayList<Socket> allUserSockets = new ArrayList<Socket>();
 		private static ArrayList<User> allUsers = new ArrayList<User>();
 	    private static ArrayList<ChatRoom> allChatRooms = new ArrayList<ChatRoom>();
 		private static HashMap<String, ObjectOutputStream> outputStreams = new HashMap<String, ObjectOutputStream>();
+		private static HashMap<String, Socket> userSockets = new HashMap<String, Socket>();
 
 		private static int userNum = 0;
 
@@ -59,8 +59,7 @@ class Server {
 		public ClientHandler(Socket socket) {
 			this.clientSocket = socket;
 			System.out.println("New thread created");
-			System.out.println("Number of connect clients: " + (userNum + 1));
-			allUserSockets.add(socket);
+			System.out.println("Number of connect clients: " + (userNum + 1));;
 
 			if (userNum == 0) {
 				loadUsers(allUsers);
@@ -167,6 +166,7 @@ class Server {
 				
 				// Reading the message from the client thread
 				try {
+					userSockets.put(localUser.getName(), clientSocket);
                     Message messageFromClient;
 					// This is where the Server takes Messages from the Clients and decides what to do based on the Message's type
 					while (true) {
@@ -227,18 +227,24 @@ class Server {
 								messageFromClient.setText(messageFromClient.getText().toUpperCase());
 								for (int i = 0; i < allChatRooms.size(); i++) {
 									if (allChatRooms.get(i).getRoomName().equals(messageFromClient.getText())) {
-										localUser.setActiveChatRoom(messageFromClient.getText());
-										allChatRooms.get(i).addUser(localUser, objectOutputStream);
-										localUser.setActiveChatRoom(messageFromClient.getText());
-										messageFromClient.setStatus("VERIFIED");
-										objectOutputStream.writeObject(messageFromClient);
-										failed = false;
+										if (allChatRooms.get(i).isLocked()) {
+											break;
+										}
+										else {
+											allChatRooms.get(i).addUser(localUser, objectOutputStream);
+											localUser.setActiveChatRoom(messageFromClient.getText());
+											messageFromClient.setStatus("VERIFIED");
+											localUser.setActiveChatRoom(messageFromClient.getText());
+											objectOutputStream.writeObject(messageFromClient);
+											failed = false;
+											break;
+										}
 									}
 								}
 								
 								if (failed) {
 									messageFromClient.setStatus("FAILED");
-									messageFromClient.setText(messageFromClient.getText() + " not found.");
+									messageFromClient.setText("That chat is locked!");
 									objectOutputStream.writeObject(messageFromClient);
 								}
 								
@@ -261,9 +267,9 @@ class Server {
 								}
 
 								if (!failed) {
+									localUser.setActiveChatRoom(messageFromClient.getText());
 									allChatRooms.add(new ChatRoom(localUser, messageFromClient, objectOutputStream));
 									Message sendReceipt = new Message("VERIFIED");
-									localUser.setActiveChatRoom(messageFromClient.getText());
 									objectOutputStream.writeObject(sendReceipt);
 								}				
 							
@@ -346,6 +352,7 @@ class Server {
 									newSupervisor = new Supervisor(userPass[0], userPass[1]);
 									allUsers.add(newSupervisor); // They do not yet have an output stream or active chat room
 									messageFromClient.setStatus("VERIFIED");
+									saveUser(newSupervisor);
 									objectOutputStream.writeObject(messageFromClient);
 								}
 			
@@ -382,7 +389,7 @@ class Server {
 							case "LOCKCHAT": {
 								for (int i = 0; i < allChatRooms.size(); i++) {
 									if (allChatRooms.get(i).getRoomName().equals(localUser.getActiveChatRoom())) {
-										allChatRooms.get(i).setChatUnlock(localUser, messageFromClient);  
+										allChatRooms.get(i).setChatLock(localUser);  
 										Message returnMessage = new Message("VERIFIED");
 										objectOutputStream.writeObject(returnMessage);
 										break;
@@ -395,7 +402,7 @@ class Server {
 							case "UNLOCKCHAT": {  
 								for (int i = 0; i < allChatRooms.size(); i++) {
 									if (allChatRooms.get(i).getRoomName().equals(localUser.getActiveChatRoom())) {
-										allChatRooms.get(i).setChatUnlock(localUser, messageFromClient);  
+										allChatRooms.get(i).setChatUnlock(localUser);  
 										Message returnMessage = new Message("VERIFIED");
 										objectOutputStream.writeObject(returnMessage);
 
@@ -408,7 +415,16 @@ class Server {
 							}
 
 							case "RETRIEVELOGS ": {  
-							
+								if (localUser instanceof Supervisor) {
+									messageFromClient.setStatus("VERIFIED");
+									objectOutputStream.writeObject(messageFromClient);
+									retrieveLogs(objectOutputStream);
+								}
+								else {
+									messageFromClient.setStatus("FAILED");
+									messageFromClient.setText("Only supervisors can retrieve logs!");
+									objectOutputStream.writeObject(messageFromClient);
+								}
 
 								System.out.println("TYPE: RETRIEVELOGS");
 								break;
@@ -425,13 +441,20 @@ class Server {
 								for (int i = 0; i < allUsers.size(); i++) {
 									if (allUsers.get(i).getName().equals(messageFromClient.getText())) {
 										User toDelete = allUsers.get(i);
-									
-										// This is shitty and will break chat rooms I think, they would have to start checking for null objects
 										outputStreams.remove(toDelete.getName());
-										toDelete = null; // Removes all references to the User, deletes their object
+										allUsers.remove(i); 
+
+										for (int j = 0; j < allChatRooms.size(); j++) {
+											allChatRooms.get(j).removeUser(toDelete);
+										}
+										
+										if (userSockets.get(toDelete.getName()) != null) {
+											userSockets.get(toDelete.getName()).close();
+										}
 										
 										messageFromClient.setStatus("VERIFIED");
 										messageFromClient.setText("The User has been deleted.");
+										updateUserFile();
 										success = true;
 
 										break;
@@ -448,9 +471,10 @@ class Server {
 								break;
 							}
 
-							default: // ???????
-							System.out.println("TYPE: DEFAULT");
-									break;
+							default: { 
+								System.out.println("TYPE: DEFAULT");
+								break;
+							}
 			        
 						}
 					}
@@ -466,10 +490,15 @@ class Server {
 
 		public void saveUser(User newUser) {
 			try {
-				FileWriter writer = new FileWriter("..\\src\\users", true);
+				FileWriter writer = new FileWriter("..\\src\\users.txt", true);
 				
-				writer.write("\nU/");
-				writer.write( newUser.getName() + "/");
+				if (newUser instanceof Supervisor) {
+					writer.write("\nS/");	
+				}
+				else {
+					writer.write("\nU/");
+				}
+				writer.write(newUser.getName() + "/");
 				writer.write(newUser.getPassword());
 				
 				writer.close();
@@ -527,11 +556,52 @@ class Server {
 			return;
 		}
 
+		public void updateUserFile() {
+			try { 
+			BufferedWriter writer = new BufferedWriter(new FileWriter("..\\src\\users.txt"));
+			for (int i = 0; i < allUsers.size(); i++) {
+				if (allUsers.get(i) instanceof Supervisor) {
+					writer.write("S/");	
+				}
+				else {
+					writer.write("U/");
+				}
+				writer.write(allUsers.get(i).getName() + "/");
+				writer.write(allUsers.get(i).getPassword());
+				if (i != allUsers.size() - 1) writer.write("\n");
+			}
+			
+			writer.close();
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 		public void logMessage(Message message, String chatRoom) {
 			try { 
 				BufferedWriter writer = new BufferedWriter(new FileWriter("logs", true));
 				writer.write(message.getTimeStamp() + "\n" + "Room: " + chatRoom + "\n" + message.getText()+"\n" + "\n");
 				writer.close();
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		public void retrieveLogs(ObjectOutputStream objectOutputStream) {
+			String currLine;
+			String allLogs = "\n";
+			Message message = new Message("VERIFIED");
+			try { 
+				BufferedReader reader = new BufferedReader(new FileReader(chatHistory));
+				while ((currLine = reader.readLine()) != null) {
+					allLogs += currLine + "\n";
+				}
+				reader.close();
+				message.setText(allLogs);
+				objectOutputStream.writeObject(message);
+				return;
 			}
 			catch (IOException e) {
 				e.printStackTrace();
