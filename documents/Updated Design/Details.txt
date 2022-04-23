@@ -5,6 +5,7 @@ MESSAGE TYPES:
    - CHATROOM
    - DISPLAYCHATROOMS
    - JOINCHATROOM
+   - LEAVECHATROOM
    - CREATECHATROOM
    - CHANGEPASSWORD
    - DISPLAYUSERS
@@ -39,7 +40,6 @@ MESSAGE TYPES:
      at my Server example, you will see that I made the input it's own class which is ran as a separate thread. FOR THIS YOU MUST PASS THE 
      ObjectInputStream OBJECT YOU CREATED AT THE START OF THE CLIENT PROGRAM TO THE CONSTRUCTOR OTHERWISE IT WILL STOP WORKING. 
 
-   - You may then prompt for the User's choice between joinChatRoom(), createChatRoom(), and changePassword(). 
 
      -----> createChatRoom() should send the Server a Message of type CREATECHATROOM with the text attribute being the desired name of the Chat Room.
             If the name is taken, the Server will return the Message with status FAILED if the name was taken, or VERIFIED if the name was free and
@@ -53,12 +53,15 @@ MESSAGE TYPES:
 	    type VERIFIED). The User should now be free to type whatever, but you need to send these as CHATROOM Messages. 
 	    ***The Server will then set the User's activeChatRoom to this ChatRoom***
 
-	    Since the User is now in a ChatRoom, you will start receiving Messages sent to that ChatRoom. This means you are receiving Messages of 
-            type CHATROOM.
+	    Since the User is now in a ChatRoom, you will start receiving Messages sent to that ChatRoom. This means you are sending and receiving Messages 
+	    of type CHATROOM.
 
 	    I do not know how it works with GUIs, but at this point we should find a way to clear all the text which is currently on the screen or
             something like that. This issue is something which can wait until the end for sure. Maybe for the time being output something to indicate
             the User changed to a new channel. It doesn't really matter, but it may help you confirm it is working.
+	    
+     -----> leaveChatRoom() should allow the User to leave their current ChatRoom and go back to some sort of menu which allows you to choose
+            to create/join a ChatRoom or the other options if applicable
 
      -----> changePassword() should send the Server a Message of type CHANGEPASSWORD. Since we do not REALLY care about security, you just need
 	    to set the text attribute to the desired password (we will not authenticate the old password - it will just be overwritten).
