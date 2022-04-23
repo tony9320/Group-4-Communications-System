@@ -44,6 +44,7 @@ class Server {
 		private final Socket clientSocket;
 		private User localUser;
 		private boolean authenticated = false;
+		private File chatHistory = new File("logs");
 		
 		private static ArrayList<Socket> allUserSockets = new ArrayList<Socket>();
 		private static ArrayList<User> allUsers = new ArrayList<User>();
@@ -105,13 +106,20 @@ class Server {
 							break;
 						}
 						else {
-							Message verifiedMessage = new Message();
-							verifiedMessage.setStatus("FAILED");
-							verifiedMessage.setText("WRONG PASSWORD");
-							objectOutputStream.writeObject(verifiedMessage);
+							Message failureMessage = new Message();
+							failureMessage.setStatus("FAILED");
+							failureMessage.setText("WRONG PASSWORD");
+							objectOutputStream.writeObject(failureMessage);
 							System.out.println("WRONG PASSWORD :" + values[1]);
 						}
 					}
+				}
+
+				if (!authenticated) {
+					Message failureMessage = new Message();
+					failureMessage.setStatus("FAILED");
+					failureMessage.setText("USERNAME NOT FOUND");
+					objectOutputStream.writeObject(failureMessage);
 				}
 				
 				// **** USER AUTHENTICATION, CREATE THE USER OBJECT AND SET ITS ATTRIBUTES ****
@@ -146,6 +154,13 @@ class Server {
 							}
 						}
 					}
+
+					if (!authenticated) {
+						Message failureMessage = new Message();
+						failureMessage.setStatus("FAILED");
+						failureMessage.setText("USERNAME NOT FOUND");
+						objectOutputStream.writeObject(failureMessage);
+					}
 			    }
 				
 				// 
@@ -173,6 +188,7 @@ class Server {
 									if (allChatRooms.get(i).getRoomName().equals(localUser.getActiveChatRoom())) {
 										messageFromClient.setText(localUser.getName() + ": " + messageFromClient.getText());
 										allChatRooms.get(i).sendMessage(messageFromClient);
+										logMessage(messageFromClient, localUser.getActiveChatRoom());
 										Message sendReceipt = new Message("VERIFIED");
 										objectOutputStream.writeObject(sendReceipt);
 										break;
@@ -352,43 +368,43 @@ class Server {
 								break;
 							}
 
-							case "REMOVECHATUSER": { /*
-								String userToRemove = messageFromClient.getText();
+							case "LEAVECHATROOM": { 
 								for (int i = 0; i < allChatRooms.size(); i++) {
 									if (allChatRooms.get(i).getRoomName().equals(localUser.getActiveChatRoom())) {
-											allChatRooms.get(i).removeUser(localUser, messageFromClient);  
-											return;
+											localUser.setActiveChatRoom(null);
 									}
-							
-			
-								*/
-								System.out.println("TYPE: REMOVECHATUSER");						
+								}
+								
+								System.out.println("TYPE: LEAVECHATROOM");						
 								break;
 							}
 
-							case "LOCKCHAT":  /*
-												String userToRemove = messageFromClient.getText();
-												for (int i = 0; i < allChatRooms.size(); i++) {
-													if (allChatRooms.get(i).getRoomName().equals(localUser.getActiveChatRoom())) {
-														allChatRooms.get(i).setChatLock(localUser, messageFromClient);  
-													}
-											}
-						
-		
-			*/
-								System.out.println("TYPE: LOCKCHAT");
-								break;
-
-							case "UNLOCKCHAT": {  /*
-								String userToRemove = messageFromClient.getText();
+							case "LOCKCHAT": {
 								for (int i = 0; i < allChatRooms.size(); i++) {
 									if (allChatRooms.get(i).getRoomName().equals(localUser.getActiveChatRoom())) {
 										allChatRooms.get(i).setChatUnlock(localUser, messageFromClient);  
+										Message returnMessage = new Message("VERIFIED");
+										objectOutputStream.writeObject(returnMessage);
+										break;
 									}
 								}
-						
-		
-			*/
+								System.out.println("TYPE: LOCKCHAT");
+								break;
+							}
+
+							case "UNLOCKCHAT": {  
+								for (int i = 0; i < allChatRooms.size(); i++) {
+									if (allChatRooms.get(i).getRoomName().equals(localUser.getActiveChatRoom())) {
+										allChatRooms.get(i).setChatUnlock(localUser, messageFromClient);  
+										Message returnMessage = new Message("VERIFIED");
+										objectOutputStream.writeObject(returnMessage);
+
+										break;
+									}
+								}
+
+								System.out.println("TYPE: UNLOCKCHAT");
+								break;
 							}
 
 							case "RETRIEVELOGS ": {  
@@ -398,28 +414,36 @@ class Server {
 								break;
 							}
 
-							case "DELETEUSER": {/*
-								if (!localUser instanceOf Supervisor) {
+							case "DELETEUSER": {
+								boolean success = false;
+								if (!(localUser instanceof Supervisor)) {
 									messageFromClient.setStatus("FAILED");
 									messageFromClient.setText("You are not a Supervisor.");
-									return;
+									break;
 								}
 								
 								for (int i = 0; i < allUsers.size(); i++) {
-									if (allUsers.get(i).getName().equals(the name from the message)) {
+									if (allUsers.get(i).getName().equals(messageFromClient.getText())) {
+										User toDelete = allUsers.get(i);
 									
 										// This is shitty and will break chat rooms I think, they would have to start checking for null objects
-										allUsers.get(i) = null; // Removes all references to the User, deletes their object
+										outputStreams.remove(toDelete.getName());
+										toDelete = null; // Removes all references to the User, deletes their object
 										
 										messageFromClient.setStatus("VERIFIED");
 										messageFromClient.setText("The User has been deleted.");
-										return;
+										success = true;
+
+										break;
 									}
+								}
+
+								if (!success) {
+									messageFromClient.setStatus("FAILED");
+									messageFromClient.setText("User not found");
 								}
 							
 							
-							
-							*/
 								System.out.println("TYPE: DELETEUSER");
 								break;
 							}
@@ -503,10 +527,17 @@ class Server {
 			return;
 		}
 
-		public void saveMessage() {
-			
-		
-	
+		public void logMessage(Message message, String chatRoom) {
+			try { 
+				BufferedWriter writer = new BufferedWriter(new FileWriter("logs", true));
+				writer.write(message.getTimeStamp() + "\n" + "Room: " + chatRoom + "\n" + message.getText()+"\n" + "\n");
+				writer.close();
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
+	
 	}
 }
+
