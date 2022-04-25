@@ -7,7 +7,7 @@ class ChatRoom {
     private String roomName;
     private ArrayList<User> chatUsers;
 	private HashMap<String, ObjectOutputStream> outputStreams;
-    private Boolean chatLocked;
+    private boolean chatLocked;
     private User host;
     private File chatFile;
     
@@ -25,7 +25,7 @@ class ChatRoom {
     	try {
 			this.chatFile.createNewFile();			//create the file for the chatroom!
 		} catch (IOException e) {
-			System.out.println("ERROR CREATING FILE");
+			e.printStackTrace();
 		}
     }
 
@@ -33,7 +33,7 @@ class ChatRoom {
     	boolean found = false;
     	
     	for(int i = 0; i < this.chatUsers.size(); i++) {			//loop through all users
-    		if(this.chatUsers.get(i).equals(user)) { 				//if present in list
+    		if(!chatUsers.get(i).equals(null) && (this.chatUsers.get(i).equals(user))) { 				//if present in list
     			found = true;										//FOUND!
 				outputStreams.replace(user.getName(), objectOutputStream);
     			reloadHistoryForUser(user);
@@ -49,7 +49,10 @@ class ChatRoom {
 
     public void sendMessage(Message message) {	//message type Chatroom
     	
-    	for(int i = 0; i < this.chatUsers.size(); i++) { 										// loop through all users
+    	for(int i = 0; i < this.chatUsers.size(); i++) { 
+			if (chatUsers.get(i) == null) {
+				chatUsers.remove(i);
+			}										// loop through all users
     		if(chatUsers.get(i).getActiveChatRoom().equals(this.roomName) &&					//user is in current chatroom
     				!chatUsers.get(i).equals(null)) {											//user is not null
     			try {
@@ -117,9 +120,10 @@ class ChatRoom {
 			}//catch
 	}//reloadHistoryForUser()
 
-    public void setChatLock(Message message) {
-    	if(message.getSender().equals(this.host)) {
+    public void setChatLock(User user) {
+    	if(user == this.host) {
     		this.chatLocked = true;
+			System.out.println("CHAT IS LOCKED");
     	}
     	else {
     		// NOT HOST SENDING REQUEST
@@ -127,9 +131,10 @@ class ChatRoom {
     	}
     }
 
-    public void setChatUnlock(Message message) {
-    	if(message.getSender().equals(this.host)) {
+    public void setChatUnlock(User user) {
+    	if(user == this.host) {
     		this.chatLocked = false;
+			System.out.println("CHAT IS UNLOCKED");
     	}
     	else {
     		// NOT HOST SENDING REQUEST
@@ -137,4 +142,17 @@ class ChatRoom {
     	}
     }
 
+	public boolean isLocked() {
+		return chatLocked;
+	}
+
+	public void removeUser(User user) {
+    	for (int i = 0; i < chatUsers.size(); i++) {
+			if (chatUsers.get(i) == user) {
+				outputStreams.remove(user.getName());
+				chatUsers.remove(i);
+				break;
+			}
+		}
+    }
 }//class
