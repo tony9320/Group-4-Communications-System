@@ -164,7 +164,7 @@ class Server {
 				// Reading the message from the client thread
 				try {
 					userSockets.put(localUser.getName(), clientSocket);
-                    			Message messageFromClient;
+                    Message messageFromClient;
 					// This is where the Server takes Messages from the Clients and decides what to do based on the Message's type
 					while (true) {
 						messageFromClient = (Message) objectInputStream.readObject();
@@ -187,11 +187,14 @@ class Server {
 										allChatRooms.get(i).sendMessage(messageFromClient);
 										logMessage(messageFromClient, localUser.getActiveChatRoom());
 										Message sendReceipt = new Message("VERIFIED");
+										if (allChatRooms.get(i).getActiveUserCount() > 1) {
+											sendReceipt.setText("Message read");
+										}
 										objectOutputStream.writeObject(sendReceipt);
 										break;
 									}
 									else if ((i == allChatRooms.size() - 1)) {
-										System.out.println("END OFLINE");
+										System.out.println("END OF LINE");
 										failed = true;
 									}
 								}
@@ -246,8 +249,8 @@ class Server {
 										else {
 											allChatRooms.get(i).addUser(localUser, objectOutputStream);
 											localUser.setActiveChatRoom(messageFromClient.getText());
+											allChatRooms.get(i).incrementActiveUsers();
 											messageFromClient.setStatus("VERIFIED");
-											localUser.setActiveChatRoom(messageFromClient.getText());
 											objectOutputStream.writeObject(messageFromClient);
 											failed = false;
 											break;
@@ -400,6 +403,7 @@ class Server {
 								for (int i = 0; i < allChatRooms.size(); i++) {
 									if (allChatRooms.get(i).getRoomName().equals(localUser.getActiveChatRoom())) {
 											localUser.setActiveChatRoom(null);
+											allChatRooms.get(i).decrementActiveUsers();
 									}
 								}
 								
