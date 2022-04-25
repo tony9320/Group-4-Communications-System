@@ -270,6 +270,7 @@ class Server {
 									localUser.setActiveChatRoom(messageFromClient.getText());
 									allChatRooms.add(new ChatRoom(localUser, messageFromClient, objectOutputStream));
 									Message sendReceipt = new Message("VERIFIED");
+									
 									objectOutputStream.writeObject(sendReceipt);
 								}				
 							
@@ -515,7 +516,8 @@ class Server {
 				BufferedReader reader;
 				User newUser = null;
 
-				reader = new BufferedReader(new FileReader("..\\src\\users.txt"));
+//				reader = new BufferedReader(new FileReader("..\\src\\users.txt"));
+				reader = new BufferedReader(new FileReader("users.txt"));
 				String line = reader.readLine();
 				
 				String[] values = line.split("/");
