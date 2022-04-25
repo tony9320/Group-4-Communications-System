@@ -52,8 +52,6 @@ class Server {
 		private static HashMap<String, Socket> userSockets = new HashMap<String, Socket>();
 
 		private static int userNum = 0;
-
-		private String username;
 		
 		// Constructor
 		public ClientHandler(Socket socket) {
