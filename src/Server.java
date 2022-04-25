@@ -169,17 +169,17 @@ class Server {
 					while (true) {
 						messageFromClient = (Message) objectInputStream.readObject();
 						messageFromClient.setSender(localUser.getName());
+						if (messageFromClient.getText().equals("")) {
+							System.out.println("Null text string passed");
+							messageFromClient.setStatus("FAILED");
+							messageFromClient.setText("NULL text not allowed!");
+							objectOutputStream.writeObject(messageFromClient);
+							continue;
+						}
 						
 						switch (messageFromClient.getType()) {
 							case "CHATROOM": {
 								boolean failed = false;
-
-								if (localUser.getActiveChatRoom() == null) {
-									messageFromClient.setStatus("FAILED");
-									messageFromClient.setText("You are not active in a chat room!");
-									objectOutputStream.writeObject(messageFromClient);
-									break;
-								}
 
 								for (int i = 0; i < allChatRooms.size(); i++) {
 									if (allChatRooms.get(i).getRoomName().equals(localUser.getActiveChatRoom())) {
@@ -191,6 +191,7 @@ class Server {
 										break;
 									}
 									else if ((i == allChatRooms.size() - 1)) {
+										System.out.println("END OFLINE");
 										failed = true;
 									}
 								}
@@ -206,9 +207,24 @@ class Server {
 							}
 												
 							case "DISPLAYCHATROOMS": {
-								String[] roomNames = new String[allChatRooms.size()];
+								String[] roomNames;
+
+								if (allChatRooms.size() == 0) {
+									roomNames = new String[1];
+									roomNames[0] = "No active chat rooms!";
+									messageFromClient.setRoomList(roomNames);
+									messageFromClient.setStatus("VERIFIED");
+									objectOutputStream.writeObject(messageFromClient);
+									break;
+								}
+								roomNames = new String[allChatRooms.size()];
 								for (int i = 0; i < allChatRooms.size(); i++) {
 									roomNames[i] = allChatRooms.get(i).getRoomName();
+									for (int j = 0; j < allUsers.size(); j++) {
+										if (allUsers.get(j).getActiveChatRoom().equals(roomNames[i])) {
+											roomNames[i] += "\nUser " + (i + 1) + ": " + allUsers.get(j).getName();
+										}
+									}
 								}
 								messageFromClient.setRoomList(roomNames);
 								messageFromClient.setStatus("VERIFIED");
@@ -237,11 +253,15 @@ class Server {
 											break;
 										}
 									}
+									else if ((i == allChatRooms.size() - 1)) {
+										System.out.println("END OFLINE");
+										failed = true;
+									}
 								}
 								
 								if (failed) {
 									messageFromClient.setStatus("FAILED");
-									messageFromClient.setText("That chat is locked!");
+									messageFromClient.setText("That chat is locked or does not exist.");
 									objectOutputStream.writeObject(messageFromClient);
 								}
 								
@@ -361,14 +381,17 @@ class Server {
 							}
 								
 							case "DISPLAYUSERS": { 
-								String listOfUsers = "";
+								String [] listOfUsers = new String[allUsers.size()];
+								System.out.println(allUsers.size());
 								for (int i = 0; i < allUsers.size(); i++) {
-									listOfUsers += allUsers.get(i).getName() + "\n";
+									listOfUsers[i] = allUsers.get(i).getName() + " | Active in: " + allUsers.get(i).getActiveChatRoom() + "\n";
 								}
 								
-								messageFromClient.setText(listOfUsers);
+								messageFromClient.setRoomList(listOfUsers);
+								messageFromClient.setStatus("VERIFIED");
 								objectOutputStream.writeObject(messageFromClient);
 
+								System.out.println("=====" + allUsers.size());
 								System.out.println("TYPE: DISPLAYUSERS");
 								break;
 							}
@@ -412,7 +435,7 @@ class Server {
 								break;
 							}
 
-							case "RETRIEVELOGS ": {  
+							case "RETRIEVELOGS": {  
 								if (localUser instanceof Supervisor) {
 									messageFromClient.setStatus("VERIFIED");
 									objectOutputStream.writeObject(messageFromClient);
