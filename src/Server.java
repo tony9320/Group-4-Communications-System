@@ -47,7 +47,7 @@ class Server {
 		private File chatHistory = new File("logs");
 		
 		private static ArrayList<User> allUsers = new ArrayList<User>();
-	    private static ArrayList<ChatRoom> allChatRooms = new ArrayList<ChatRoom>();
+	        private static ArrayList<ChatRoom> allChatRooms = new ArrayList<ChatRoom>();
 		private static HashMap<String, ObjectOutputStream> outputStreams = new HashMap<String, ObjectOutputStream>();
 		private static HashMap<String, Socket> userSockets = new HashMap<String, Socket>();
 
@@ -162,12 +162,11 @@ class Server {
 					}
 			    }
 				
-				// 
-				
+
 				// Reading the message from the client thread
 				try {
 					userSockets.put(localUser.getName(), clientSocket);
-                    Message messageFromClient;
+                    			Message messageFromClient;
 					// This is where the Server takes Messages from the Clients and decides what to do based on the Message's type
 					while (true) {
 						messageFromClient = (Message) objectInputStream.readObject();
@@ -282,6 +281,7 @@ class Server {
 								localUser.changePassword(messageFromClient.getText());
 								messageFromClient.setStatus("VERIFIED");
 								objectOutputStream.writeObject(messageFromClient);
+								updateUserFile();
 
 								System.out.println("TYPE: CHANGEPASSWORD");
 								break;
