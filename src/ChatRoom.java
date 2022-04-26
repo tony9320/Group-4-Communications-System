@@ -8,6 +8,7 @@ class ChatRoom {
     private ArrayList<User> chatUsers;
 	private HashMap<String, ObjectOutputStream> outputStreams;
     private boolean chatLocked;
+	private int activeUserCount;
     private User host;
     private File chatFile;
     
@@ -18,6 +19,8 @@ class ChatRoom {
     	this.host = user;							//set host
     	this.roomName = message.getText();			//set name of room
     	this.chatFile = new File(roomName);
+		this.activeUserCount = 1;
+
 
 		outputStreams = new HashMap<String, ObjectOutputStream>();
 		outputStreams.put(host.getName(), outputStream);
@@ -155,4 +158,16 @@ class ChatRoom {
 			}
 		}
     }
+
+	public int getActiveUserCount() {
+		return activeUserCount;
+	}
+
+	public void incrementActiveUsers() {
+		activeUserCount++;
+	}
+
+	public void decrementActiveUsers() {
+		activeUserCount--;
+	}
 }//class
