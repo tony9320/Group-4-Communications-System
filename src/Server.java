@@ -47,7 +47,7 @@ class Server {
 		private File chatHistory = new File("logs");
 		
 		private static ArrayList<User> allUsers = new ArrayList<User>();
-	        private static ArrayList<ChatRoom> allChatRooms = new ArrayList<ChatRoom>();
+	    private static ArrayList<ChatRoom> allChatRooms = new ArrayList<ChatRoom>();
 		private static HashMap<String, ObjectOutputStream> outputStreams = new HashMap<String, ObjectOutputStream>();
 		private static HashMap<String, Socket> userSockets = new HashMap<String, Socket>();
 
@@ -244,6 +244,7 @@ class Server {
 								for (int i = 0; i < allChatRooms.size(); i++) {
 									if (allChatRooms.get(i).getRoomName().equals(messageFromClient.getText())) {
 										if (allChatRooms.get(i).isLocked()) {
+											messageFromClient.setText("That ChatRoom is locked!")
 											break;
 										}
 										else {
@@ -258,13 +259,13 @@ class Server {
 									}
 									else if ((i == allChatRooms.size() - 1)) {
 										System.out.println("END OFLINE");
+										messageFromClient.setText("That ChatRoom does not exist.");
 										failed = true;
 									}
 								}
 								
 								if (failed) {
-									messageFromClient.setStatus("FAILED");
-									messageFromClient.setText("That chat is locked or does not exist.");
+									messageFromClient.setStatus("FAILED");;
 									objectOutputStream.writeObject(messageFromClient);
 								}
 								
@@ -280,7 +281,7 @@ class Server {
 									if (allChatRooms.get(i).getRoomName().equals(messageFromClient.getText())) {
 										messageFromClient.setStatus("FAILED"); 
 										messageFromClient.setText("This room already exists!");
-										objectOutputStream.writeObject(messageFromClient);   
+										objectOutputStream.writeObject(messageFromClient);
 										failed = true;
 										break;               
 									}
@@ -404,6 +405,8 @@ class Server {
 									if (allChatRooms.get(i).getRoomName().equals(localUser.getActiveChatRoom())) {
 											localUser.setActiveChatRoom(null);
 											allChatRooms.get(i).decrementActiveUsers();
+											messageFromClient.setStatus("VERIFIED");
+											objectOutputStream.writeObject(messageFromClient);
 									}
 								}
 								
@@ -430,7 +433,6 @@ class Server {
 										allChatRooms.get(i).setChatUnlock(localUser);  
 										Message returnMessage = new Message("VERIFIED");
 										objectOutputStream.writeObject(returnMessage);
-
 										break;
 									}
 								}
