@@ -96,16 +96,12 @@ class Server {
 							System.out.println("User verified");
 							authenticated = true;
 
-							Message verifiedMessage = new Message();
-							verifiedMessage.setStatus("VERIFIED");
-							verifiedMessage.setText("YOU ARE VERIFIED");
+							Message verifiedMessage = new Message("LOGIN", "VERIFIED", "YOU ARE VERIFIED");
 							objectOutputStream.writeObject(verifiedMessage);
 							break;
 						}
 						else {
-							Message failureMessage = new Message();
-							failureMessage.setStatus("FAILED");
-							failureMessage.setText("WRONG PASSWORD");
+							Message failureMessage = new Message("LOGIN", "FAILED", "WRONG PASSWORD");
 							objectOutputStream.writeObject(failureMessage);
 							System.out.println("WRONG PASSWORD :" + values[1]);
 						}
@@ -113,9 +109,7 @@ class Server {
 				}
 
 				if (!authenticated) {
-					Message failureMessage = new Message();
-					failureMessage.setStatus("FAILED");
-					failureMessage.setText("USERNAME NOT FOUND");
+					Message failureMessage = new Message("LOGIN", "FAILED", "USERNAME NOT FOUND");
 					objectOutputStream.writeObject(failureMessage);
 				}
 				
@@ -136,16 +130,12 @@ class Server {
 								System.out.println("User verified");
 								authenticated = true;
 	
-								Message verifiedMessage = new Message();
-								verifiedMessage.setStatus("VERIFIED");
-								verifiedMessage.setText("YOU ARE VERIFIED");
+								Message verifiedMessage = new Message("LOGIN", "VERIFIED", "YOU ARE VERIFIED");
 								objectOutputStream.writeObject(verifiedMessage);
 								break;
 							}
 							else {
-								Message verifiedMessage = new Message();
-								verifiedMessage.setStatus("FAILED");
-								verifiedMessage.setText("WRONG PASSWORD");
+								Message verifiedMessage = new Message("LOGIN", "FAILED", "WRONG PASSWORD");;
 								objectOutputStream.writeObject(verifiedMessage);
 								System.out.println("WRONG PASSWORD :" + values[1]);
 							}
@@ -153,9 +143,8 @@ class Server {
 					}
 
 					if (!authenticated) {
-						Message failureMessage = new Message();
-						failureMessage.setStatus("FAILED");
-						failureMessage.setText("USERNAME NOT FOUND");
+						Message failureMessage = new Message("LOGIN", "FAILED", "USERNAME NOT FOUND");
+						objectOutputStream.writeObject(failureMessage);
 						objectOutputStream.writeObject(failureMessage);
 					}
 			    }
@@ -186,7 +175,7 @@ class Server {
 										messageFromClient.setText(localUser.getName() + ": " + messageFromClient.getText());
 										allChatRooms.get(i).sendMessage(messageFromClient);
 										logMessage(messageFromClient, localUser.getActiveChatRoom());
-										Message sendReceipt = new Message("VERIFIED");
+										Message sendReceipt = new Message("CHATROOM", "VERIFIED", "Sent");
 										if (allChatRooms.get(i).getActiveUserCount() > 1) {
 											sendReceipt.setText("Message read");
 										}
@@ -200,8 +189,7 @@ class Server {
 								}
 
 								if (failed) {
-									Message sendReceipt = new Message("FAILED");
-									sendReceipt.setText("Chat Room not found.");
+									Message sendReceipt = new Message("CHATROOM", "FAILED", "Chat Room not found.");
 									objectOutputStream.writeObject(sendReceipt);
 								}						
 								
@@ -419,7 +407,7 @@ class Server {
 								for (int i = 0; i < allChatRooms.size(); i++) {
 									if (allChatRooms.get(i).getRoomName().equals(localUser.getActiveChatRoom())) {
 										allChatRooms.get(i).setChatLock(localUser);  
-										Message returnMessage = new Message("VERIFIED");
+										Message returnMessage = new Message("LOCKCHAT", "VERIFIED", "The room will be locked if you are the Chat Room owner!");
 										objectOutputStream.writeObject(returnMessage);
 										break;
 									}
@@ -432,7 +420,7 @@ class Server {
 								for (int i = 0; i < allChatRooms.size(); i++) {
 									if (allChatRooms.get(i).getRoomName().equals(localUser.getActiveChatRoom())) {
 										allChatRooms.get(i).setChatUnlock(localUser);  
-										Message returnMessage = new Message("VERIFIED");
+										Message returnMessage = new Message("UNLOCKCHAT", "VERIFIED", "The room will be unlocked if you are the Chat Room owner!");
 										objectOutputStream.writeObject(returnMessage);
 										break;
 									}
@@ -463,6 +451,8 @@ class Server {
 								if (!(localUser instanceof Supervisor)) {
 									messageFromClient.setStatus("FAILED");
 									messageFromClient.setText("You are not a Supervisor.");
+									System.out.println("TYPE: DELETEUSER ---- Failed (Not a Supervisor)");
+									objectOutputStream.writeObject(messageFromClient);
 									break;
 								}
 								
@@ -482,8 +472,10 @@ class Server {
 										
 										messageFromClient.setStatus("VERIFIED");
 										messageFromClient.setText("The User has been deleted.");
+										objectOutputStream.writeObject(messageFromClient);
 										updateUserFile();
 										success = true;
+										System.out.println("TYPE: DELETEUSER --- SUCCESS (User was deleted");
 
 										break;
 									}
@@ -492,6 +484,8 @@ class Server {
 								if (!success) {
 									messageFromClient.setStatus("FAILED");
 									messageFromClient.setText("User not found");
+									objectOutputStream.writeObject(messageFromClient);
+									System.out.println("TYPE: DELETEUSER ---- Failed (User not found)");
 								}
 							
 							
