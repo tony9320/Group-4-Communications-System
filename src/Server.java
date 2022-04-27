@@ -232,7 +232,7 @@ class Server {
 								for (int i = 0; i < allChatRooms.size(); i++) {
 									if (allChatRooms.get(i).getRoomName().equals(messageFromClient.getText())) {
 										if (allChatRooms.get(i).isLocked()) {
-											messageFromClient.setText("That ChatRoom is locked!")
+											messageFromClient.setText("That ChatRoom is locked!");
 											break;
 										}
 										else {
@@ -367,7 +367,7 @@ class Server {
 									objectOutputStream.writeObject(messageFromClient);
 								}
 			
-		
+			
 			
 								System.out.println("TYPE: CREATESUPERVISOR");
 								break;
