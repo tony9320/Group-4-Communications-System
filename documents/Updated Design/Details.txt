@@ -8,8 +8,12 @@ MESSAGE TYPES:
    - CREATECHATROOM
    - CHANGEPASSWORD
    - DISPLAYUSERS
-   - SETCHATLOCK
-   - SETCHATUNLOCK
+   - LOCKCHAT **NEW NAME**
+   - UNLOCKCHAT **NEW NAME*
+   
+----NEW---
+   - LEAVECHATROOM
+   
    
    - RETRIEVELOGS (Will only succeed if the requesting User is actually a Supervisor)
    - DELETEUSER (Will only succeed if the requesting User is actually a Supervisor)
@@ -74,9 +78,15 @@ MESSAGE TYPES:
             The Message's text attribute should read "usersname maybealastname/password" so that I can use a delimiter of / to parse it. Whether
 	    you are trying to make a User or Supervisor depends on the type attribute.
 	    
-     -----> setChatLock() is a Message with any text and of type SETCHATLOCK. If the requesting User is the chat owner, the ChatRoom will be locked
+	    
+	************** NEW/UPDATES *************
+     -----> lockChat() is a Message with any text and of type LOCKCHAT. If the requesting User is the chat owner, the ChatRoom will be locked
      
-     -----> setChatUnlock() is a Message with any text and of type SETCHATLOCK. If the requesting User is the chat owner, the ChatRoom will be unlocked
+     -----> unlockChat() is a Message with any text and of type UNLOCKCHAT. If the requesting User is the chat owner, the ChatRoom will be unlocked
+     
+     -----> leaveChatRoom() Message of type LEAVECHATROOM, removes the User from their active chat
+     
+     -----> retrieveLogs() Message of type RETRIEVELOGS, returns the logs within the Message.type attribute
 
 
 
