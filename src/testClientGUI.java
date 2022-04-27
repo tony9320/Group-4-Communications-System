@@ -39,7 +39,7 @@ public class testClientGUI extends JFrame {
 		// remove old items
 		getContentPane().removeAll();
 		
-		HomePanel homePanel = new HomePanel(this);
+		testHomePanel homePanel = new testHomePanel(this);
 		homePanel = homePanel.constructLoginWindow(type);
 		getContentPane().add(homePanel);
 		setTitle(type);
