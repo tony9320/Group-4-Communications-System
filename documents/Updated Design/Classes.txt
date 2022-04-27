@@ -70,5 +70,6 @@ Methods:
 
 + void decrementActiveCount()
 
++ int getChatUsersSize()... gets the size of the arrayList of all Users
 
 
