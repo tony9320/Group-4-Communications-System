@@ -170,4 +170,8 @@ class ChatRoom {
 	public void decrementActiveUsers() {
 		activeUserCount--;
 	}
+
+	public int getChatUsersSize() {
+		return this.chatUsers.size();
+	}
 }//class
