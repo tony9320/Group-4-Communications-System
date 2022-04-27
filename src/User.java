@@ -1,5 +1,3 @@
-package project;
-
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
