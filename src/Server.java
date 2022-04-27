@@ -543,8 +543,7 @@ class Server {
 				BufferedReader reader;
 				User newUser = null;
 
-//				reader = new BufferedReader(new FileReader("..\\src\\users.txt"));
-				reader = new BufferedReader(new FileReader("users.txt"));
+				reader = new BufferedReader(new FileReader("..\\src\\users.txt"));
 				String line = reader.readLine();
 				
 				String[] values = line.split("/");
