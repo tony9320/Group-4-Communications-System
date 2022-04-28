@@ -232,6 +232,18 @@ import java.io.*;
 			
 		}
 		
+		public void displayChatUsers()
+		{
+			Message chatMessage = new Message();
+			chatMessage.setType("CHATUSERS");
+			try {
+				objectOutputStream.writeObject(chatMessage);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
 		public void logOut()
 		{
 			

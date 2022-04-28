@@ -293,12 +293,29 @@ class Server {
 							case "LEAVECHATROOM": { 
 								for (int i = 0; i < allChatRooms.size(); i++) {
 									if (allChatRooms.get(i).getRoomName().equals(localUser.getActiveChatRoom())) {
+											String currentChat = localUser.getActiveChatRoom();
 											localUser.setActiveChatRoom("");
 											allChatRooms.get(i).decrementActiveUsers();
+											//Loop through to find active users in current chatroom
+											for(int j = 0; j < allUsers.size(); j++)
+											{
+												if(allUsers.get(j).getActiveChatRoom().equals(currentChat))
+												{
+													//Get the active user's objectOutputStream
+													objectOutputStream = outputStreams.get(allUsers.get(j).getName());
+													try {
+														objectOutputStream.writeObject(new Message("LEFT", localUser.getName()+ " has left the chat!"));
+													} catch (IOException e) {
+														// TODO Auto-generated catch block
+														e.printStackTrace();
+													}
+												}
+											}
 											break;
 									}
 								}
-
+								//reset the objectOutputStream
+								objectOutputStream = outputStreams.get(localUser.getName());
 								messageFromClient.setStatus("VERIFIED");
 								objectOutputStream.writeObject(messageFromClient);
 								
@@ -403,7 +420,30 @@ class Server {
 									}
 	
 								}
+									System.out.println("TYPE: CHATLOG");
 									break;
+							}
+							case "CHATUSERS":{
+								
+								if(localUser.getActiveChatRoom() != null)
+								{
+									String appendString = "Current Users:\n";
+									for(int i = 0; i < allUsers.size(); i++)
+									{
+										
+										if(allUsers.get(i).getActiveChatRoom().equals(localUser.getActiveChatRoom()))
+										{
+											appendString += allUsers.get(i).getName() + "\n";
+										}
+							
+									}
+									messageFromClient.setStatus("VERIFIED");
+									messageFromClient.setText(appendString);
+									objectOutputStream.writeObject(messageFromClient);
+								}
+								
+								System.out.println("TYPE: CHATUSERS");
+								break;
 							}
 							case "LOGOUT": { 
 								clientSocket.close();
@@ -595,6 +635,23 @@ class Server {
 							return false;
 						}
 						else {
+							//Loop to check if someone or multiple people are currently in the chat room
+							for(int j = 0; j < allUsers.size(); j++)
+							{
+								if(allUsers.get(j).getActiveChatRoom().equals(messageFromClient.getText()))
+								{
+									//Get the active user's objectOutputStream
+									objectOutputStream = outputStreams.get(allUsers.get(j).getName());
+									try {
+										objectOutputStream.writeObject(new Message("JOINED", localUser.getName()+ " has joined the chat!"));
+									} catch (IOException e) {
+										// TODO Auto-generated catch block
+										e.printStackTrace();
+									}
+								}
+							}
+							//restore the objectOutputStream to the original user
+							objectOutputStream = outputStreams.get(localUser.getName());
 							allChatRooms.get(i).addUser(localUser, objectOutputStream);
 							localUser.setActiveChatRoom(messageFromClient.getText());
 							allChatRooms.get(i).incrementActiveUsers();

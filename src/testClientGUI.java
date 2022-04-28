@@ -335,7 +335,7 @@ public class testClientGUI extends JFrame {
 	}
 	
 	//Function that creates and displays the chat window after selecting a room
-	public void displayChat(String s)
+	public void displayChat(String s, boolean firstTime)
 	{
 		
 		// remove old items
@@ -355,8 +355,12 @@ public class testClientGUI extends JFrame {
 		homePanel.displayLine();
 		
 		//Start a new thread for listening
-		ReceiveMessages inputThread = new ReceiveMessages(client.getSocket(), client.getObjectInputStream(), homePanel);
+		ReceiveMessages inputThread = new ReceiveMessages(client.getSocket(), client.getObjectInputStream(), homePanel, this);
 		new Thread(inputThread).start();
+		if(!firstTime)
+		{
+			reloadChat();
+		}
 	}
 	
 	//Functionality for the Send button in the chat window
@@ -387,18 +391,28 @@ public class testClientGUI extends JFrame {
 		client.logOut();
 	}
 	
+	public String getCurrentUser()
+	{
+		return currentUser;
+	}
+	
+	public void displayChatUsers()
+	{
+		client.displayChatUsers();
+	}
+	
 	//Handles chat threads
 	private static class ReceiveMessages implements Runnable {
 		private final Socket clientSocket;
         private ObjectInputStream objectInStream;
 		private testHomePanel homePanel;
-
+		private testClientGUI tgui;
 		
-		public ReceiveMessages(Socket socket, ObjectInputStream objectInputStream, testHomePanel homeP) {
+		public ReceiveMessages(Socket socket, ObjectInputStream objectInputStream, testHomePanel homeP, testClientGUI tClient) {
 			this.clientSocket = socket;
             this.objectInStream = objectInputStream;
             this.homePanel = homeP;
-
+            this.tgui = tClient;
 			System.out.println("Creating the receive thread...");
 			
 		} 
@@ -418,7 +432,15 @@ public class testClientGUI extends JFrame {
 				}
 				else if(replyMessage.getType().equals("CHATROOM"))
 				{
-					homePanel.display(replyMessage.getText());
+					String displayText[] = replyMessage.getText().split("\n");
+					if(!tgui.getCurrentUser().equals(replyMessage.getSender()))
+					{
+						homePanel.display(displayText[0]);
+					}
+					else
+					{
+						homePanel.display(replyMessage.getText());
+					}
 				}
 				else if(replyMessage.getType().equals("LEAVECHATROOM"))
 				{	//If the user clicks the Exit button, end the thread
@@ -435,6 +457,22 @@ public class testClientGUI extends JFrame {
 				}
 				else if(replyMessage.getType().equals("HISTORY"))
 				{
+					
+					homePanel.display(parseHistory(replyMessage.getText(), tgui.getCurrentUser()));
+					homePanel.displayLine();
+				}
+				else if(replyMessage.getType().equals("JOINED"))
+				{
+					homePanel.display(replyMessage.getText());
+					homePanel.displayLine();
+				}
+				else if (replyMessage.getType().equals("CHATUSERS"))
+				{
+					homePanel.display(replyMessage.getText());
+					homePanel.displayLine();
+				}
+				else if(replyMessage.getType().equals("LEFT"))
+				{
 					homePanel.display(replyMessage.getText());
 					homePanel.displayLine();
 				}
@@ -447,6 +485,35 @@ public class testClientGUI extends JFrame {
 			e.printStackTrace();
 		}
 	}
+		
+	private String parseHistory(String text, String user)
+	{
+		
+		String sArr[] = text.split("\n([A-z]*)\n");
+		String returnString = "";
+		
+		for(String s : sArr)
+		{
+			
+			String tempArr[] = s.split(":");
+			if(tempArr[0].equals(user))
+			{
+				returnString += s;
+				returnString += "\n";
+			}
+			else
+			{
+				returnString += s.split("\n")[0];
+				returnString += "\n";
+			}
+			
+			
+		}
+		
+		return returnString;
+	}
+		
 }
+	
 	
 }
