@@ -218,6 +218,20 @@ import java.io.*;
 			return logMessage;
 		}
 		
+		public void reloadChat()
+		{
+			Message chatMessage = new Message();
+			chatMessage.setType("CHATLOG");
+			try {
+				objectOutputStream.writeObject(chatMessage);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+	
+			
+		}
+		
 		public void logOut()
 		{
 			

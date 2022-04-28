@@ -98,7 +98,7 @@ class Server {
 						messageFromClient.setSender(localUser.getName());
 
 						// Prevent empty strings
-						if (messageFromClient.getText().equals("") || messageFromClient.getText() == null) {
+						if (messageFromClient.getText() == null || messageFromClient.getText().equals("")) {
 							System.out.println("Null text string passed");
 							messageFromClient.setStatus("FAILED");
 							messageFromClient.setText("NULL text not allowed!");
@@ -389,12 +389,28 @@ class Server {
 								System.out.println("TYPE: DELETEUSER");
 								break;
 							}
-
+							case "CHATLOG":{
+								
+								if(localUser.getActiveChatRoom() != null)
+								{
+									for(int i = 0; i < allChatRooms.size(); i++)
+									{
+										if(allChatRooms.get(i).getRoomName().equals(localUser.getActiveChatRoom()))
+										{
+											allChatRooms.get(i).getHistory(localUser, objectOutputStream);
+											break;
+										}
+									}
+	
+								}
+									break;
+							}
 							case "LOGOUT": { 
 								clientSocket.close();
 								localUser.setActiveChatRoom("");
 								break;
 							}
+							
 
 							default: { 
 								System.out.println("TYPE: DEFAULT");

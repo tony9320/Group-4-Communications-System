@@ -134,9 +134,10 @@ class ChatRoom {
     public void setChatLock(User user, Message messageFromClient, ObjectOutputStream objectOutputStream) {
 		Message returnMessage;
     	if(user == this.host) {
-    		this.chatLocked = true;
-			if (!this.isLocked())
+			if (!this.isLocked()) {
 				returnMessage = new Message("LOCKCHAT", "VERIFIED", "The room has been locked!");
+				this.chatLocked = true;
+			}
 			else 
 				returnMessage = new Message("LOCKCHAT", "VERIFIED", "The room is already locked....");
 
@@ -161,9 +162,12 @@ class ChatRoom {
     public void setChatUnlock(User user, Message messageFromClient, ObjectOutputStream objectOutputStream) {
 		Message returnMessage;
     	if(user == this.host) {
-    		this.chatLocked = false;
-			if (!this.isLocked())
+    		
+			if (this.isLocked())
+			{
 				returnMessage = new Message("LOCKCHAT", "VERIFIED", "The room has been unlocked!");
+				this.chatLocked = false;
+			}
 			else 
 				returnMessage = new Message("LOCKCHAT", "VERIFIED", "The room is already unlocked....");
 			try {
@@ -220,4 +224,27 @@ class ChatRoom {
 	public String getOwner() {
 		return host.getName();
 	}
+	
+	public void getHistory(User user, ObjectOutputStream objectOutputStream) {
+		boolean found = false;
+		for(int i = 0; i < this.chatUsers.size(); i++) {			//loop through all users
+    		if(!chatUsers.get(i).equals(null) && (this.chatUsers.get(i).equals(user))) { 				//if present in list
+    			found = true;										//FOUND!
+				outputStreams.replace(user.getName(), objectOutputStream);
+    			reloadHistoryForUser(user);
+    			break;
+    		}//if
+    	}//for
+		
+		if(!found)
+		{
+			try {
+				objectOutputStream.writeObject(new Message("HISTORY", "FAILED", ""));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
 }//class

@@ -261,7 +261,7 @@ public class testHomePanel extends JPanel {
 							}
 							else
 							{
-								JOptionPane.showMessageDialog(null, "Unable to join room!");
+								JOptionPane.showMessageDialog(null, "Room is locked!");
 							}
 						}
 					});
@@ -318,7 +318,7 @@ public class testHomePanel extends JPanel {
 	
 	private JPanel createWestChatPanel()
 	{
-		JPanel west = new JPanel(new GridLayout(2,1));
+		JPanel west = new JPanel(new GridLayout(4,1));
 		
 		JButton lockRoomB = new JButton("Lock Chat Room");
 		west.add(lockRoomB);
@@ -337,6 +337,26 @@ public class testHomePanel extends JPanel {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				tgui.unlockChatRoom();
+			}
+		});
+		JButton historyB = new JButton("Reload Chat");
+		west.add(historyB);
+		historyB.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				displayTA.setText("");
+				tgui.reloadChat();
+				
+			}
+		});
+		JButton clearChatB = new JButton("Clear Chat");
+		west.add(clearChatB);
+		clearChatB.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				displayTA.setText("");
 			}
 		});
 		
