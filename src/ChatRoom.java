@@ -58,7 +58,12 @@ class ChatRoom {
     }//addUser()
 
     public void sendMessage(Message message) {	//message type Chatroom
-    	
+    	if (activeUserCount  <= 1) {
+			message.setText(message.getText() + "\n(Sent)\n");
+		} 
+		else {
+			message.setText(message.getText() + "\n(Read)\n");
+		}
     	for(int i = 0; i < this.chatUsers.size(); i++) { 
 			if (chatUsers.get(i) == null) {
 				chatUsers.remove(i);
