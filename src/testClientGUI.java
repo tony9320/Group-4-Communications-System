@@ -423,14 +423,14 @@ public class testClientGUI extends JFrame {
 				} 
 				else //Handle lock/unlock messages
 				{
-					if(replyMessage.getType().equals("LOCKCHATROOM"))
+					if(replyMessage.getType().equals("LOCKCHAT"))
 					{
-						homePanel.display("Chat Room is now locked!");
+						homePanel.display(replyMessage.getText());
 						homePanel.displayLine();
 					}
-					else
+					else if (replyMessage.getType().equals("UNLOCKCHAT"))
 					{
-						homePanel.display("Chat Room is now unlocked!");
+						homePanel.display(replyMessage.getText());
 						homePanel.displayLine();
 					}
 				}
