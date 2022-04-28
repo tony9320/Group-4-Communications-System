@@ -86,8 +86,7 @@ class Server {
 				while (!authenticated) {
 					loginMessage = (Message) objectInputStream.readObject();
 					authenticated = authenticate(loginMessage, objectOutputStream);
-					System.out.println("In authenticated loop");
-					
+					System.out.println("In authenticated loop");	
 				}
 
 				// Reading the message from the client thread
@@ -96,9 +95,12 @@ class Server {
                     Message messageFromClient;
 					// This is where the Server takes Messages from the Clients and decides what to do based on the Message's type
 					while (true) {
+						// Read the Message
 						messageFromClient = (Message) objectInputStream.readObject();
 						messageFromClient.setSender(localUser.getName());
-						if (messageFromClient.getText().equals("")) {
+
+						// Prevent empty strings
+						if (messageFromClient.getText().equals("") || messageFromClient.getText() == null) {
 							System.out.println("Null text string passed");
 							messageFromClient.setStatus("FAILED");
 							messageFromClient.setText("NULL text not allowed!");
@@ -141,6 +143,7 @@ class Server {
 								messageFromClient.setText(messageFromClient.getText().toUpperCase());
 								boolean failed = false;
 
+								// Checks if the room exists
 								for (int i = 0; i < allChatRooms.size(); i++) {
 									if (allChatRooms.get(i).getRoomName().equals(messageFromClient.getText())) {
 										messageFromClient.setStatus("FAILED"); 
@@ -151,15 +154,14 @@ class Server {
 									}
 								}
 
+								// ChatRoom name is not already taken
 								if (!failed) {
 									localUser.setActiveChatRoom(messageFromClient.getText());
 									allChatRooms.add(new ChatRoom(localUser, messageFromClient, objectOutputStream));
 									Message sendReceipt = new Message("VERIFIED");
-									
 									objectOutputStream.writeObject(sendReceipt);
 								}				
-							
-							
+											
 								System.out.println("TYPE: CREATECHATROOM");
 								break;
 							}
@@ -169,7 +171,6 @@ class Server {
 									messageFromClient.setStatus("FAILED");
 									messageFromClient.setText("NULL password not allowed!");
 									objectOutputStream.writeObject(messageFromClient);
-
 									break;
 								}
 	
@@ -183,9 +184,19 @@ class Server {
 							}
 
 							case "CREATEUSER": {
+								// Null error check
+								if (invalidUserPasswordCheck(messageFromClient)) {
+									messageFromClient.setStatus("FAILED");
+									messageFromClient.setText("NULL username or password not allowed");
+									System.out.println("NULL FAIL IN CREATE USER");
+									objectOutputStream.writeObject(messageFromClient);
+									break;
+								}
+
 								boolean failed = false;
 								User newUser;
 
+								// Only Supervisors may add Users!
 								if (!(localUser instanceof Supervisor)) {
 									messageFromClient.setStatus("FAILED");
 									messageFromClient.setText("You are not a Supervisor.");
@@ -193,8 +204,15 @@ class Server {
 									break;
 								}
 
+								if (invalidUserPasswordCheck(messageFromClient)) {
+									messageFromClient = new Message("LOGIN", "FAILED", "NULL username or password submitted.");
+									objectOutputStream.writeObject(messageFromClient);
+									break;
+								}
+
 								String[] userPass = messageFromClient.getText().split("/");
 								
+								// Checks if the name is taken
 								for (int i = 0; i < allUsers.size(); i++) {
 									if (allUsers.get(i).getName().equals(userPass[0])) {
 										messageFromClient.setStatus("FAILED");
@@ -220,14 +238,24 @@ class Server {
 							}
 
 							case "CREATESUPERVISOR": { 
+								// Null error check
+								if (invalidUserPasswordCheck(messageFromClient)) {
+									messageFromClient.setStatus("FAILED");
+									messageFromClient.setText("NULL username or password not allowed");
+									objectOutputStream.writeObject(messageFromClient);
+									System.out.println("NULL FAIL IN CREATE SUPERVISOR");
+									break;
+								}
+
 								boolean failed = false;
 								Supervisor newSupervisor = null;
 
+								// Only Supervisors may add Supervisors!
 								if (!(localUser instanceof Supervisor)) {
 									messageFromClient.setStatus("FAILED");
 									messageFromClient.setText("You are not a Supervisor.");
 									objectOutputStream.writeObject(messageFromClient);
-									return;
+									break;
 								}
 								
 								String[] userPass = messageFromClient.getText().split("/");
@@ -238,7 +266,7 @@ class Server {
 										messageFromClient.setText("This User already exists.");
 										objectOutputStream.writeObject(messageFromClient);
 										failed = true;	
-										return;
+										break;
 									}
 								}
 			
@@ -250,9 +278,7 @@ class Server {
 									saveUser(newSupervisor);
 									objectOutputStream.writeObject(messageFromClient);
 								}
-			
-			
-			
+						
 								System.out.println("TYPE: CREATESUPERVISOR");
 								break;
 							}
@@ -318,8 +344,6 @@ class Server {
 
 							case "RETRIEVELOGS": {  
 								if (localUser instanceof Supervisor) {
-									messageFromClient.setStatus("VERIFIED");
-									objectOutputStream.writeObject(messageFromClient);
 									retrieveLogs(objectOutputStream);
 								}
 								else {
@@ -396,45 +420,55 @@ class Server {
 			}
 		}
 
+		public boolean invalidUserPasswordCheck(Message messageFromClient) {
+			if (messageFromClient.getText().equals("/")) {
+				return true;
+			}
+			else {
+				char first = messageFromClient.getText().charAt(messageFromClient.getText().length() - 1);
+				char last = messageFromClient.getText().charAt(0);
+				if (first == '/' || last == '/') {
+					return true;
+				}
+				
+				return false;
+			}
+
+
+		}
+
+	
 		public boolean authenticate(Message loginMessage, ObjectOutputStream objectOutputStream) {
 			String[] values;
 			boolean success = false;
 			Message failureMessage;
 			try {
-				if (loginMessage.getText().equals("/")) {
-					failureMessage = new Message("LOGIN", "FAILED", "USERNAME AND PASSWORD ARE NULL");
-					objectOutputStream.writeObject(failureMessage);
+				if (invalidUserPasswordCheck(loginMessage)) {
+					loginMessage = new Message("LOGIN", "FAILED", "NULL username or password submitted.");
+					objectOutputStream.writeObject(loginMessage);
 					return false;
 				}
-				else {
-					char first = loginMessage.getText().charAt(loginMessage.getText().length() - 1);
-					char last = loginMessage.getText().charAt(0);
-					if (first == '/' || last == '/') {
-						failureMessage = new Message("LOGIN", "FAILED", "NULL USER OR PASSWORD PASSED");
-						objectOutputStream.writeObject(failureMessage);
-						return false;
-					}
 
-					values = loginMessage.getText().split("/");
-					for (int i = 0; i < allUsers.size(); i++) {
-						System.out.println(allUsers.size());
-						if (allUsers.get(i).getName().equals(values[0])) {
-							if (allUsers.get(i).getPassword().equals(values[1])) {
-								localUser = allUsers.get(i);
-								localUser.setObjectOutputStream(objectOutputStream);
-								outputStreams.replace(localUser.getName(), objectOutputStream);
-								System.out.println("User verified");
-								success = true;
+				values = loginMessage.getText().split("/");
+				for (int i = 0; i < allUsers.size(); i++) {
+					System.out.println(allUsers.size());
+					if (allUsers.get(i).getName().equals(values[0])) {
+						if (allUsers.get(i).getPassword().equals(values[1])) {
+							// Create the local "identity" for the User and update their streams
+							localUser = allUsers.get(i);
+							localUser.setObjectOutputStream(objectOutputStream);
+							outputStreams.replace(localUser.getName(), objectOutputStream);
+							System.out.println("User verified");
+							success = true;
 
-								Message verifiedMessage = new Message("LOGIN", "VERIFIED", "YOU ARE VERIFIED");
-								objectOutputStream.writeObject(verifiedMessage);
-								return true;
-							}
-							else {
-								failureMessage = new Message("LOGIN", "FAILED", "WRONG PASSWORD");
-								objectOutputStream.writeObject(failureMessage);
-								return false;
-							}
+							Message verifiedMessage = new Message("LOGIN", "VERIFIED", "YOU ARE VERIFIED");
+							objectOutputStream.writeObject(verifiedMessage);
+							return true;
+						}
+						else {
+							failureMessage = new Message("LOGIN", "FAILED", "WRONG PASSWORD");
+							objectOutputStream.writeObject(failureMessage);
+							return false;
 						}
 					}
 				}
