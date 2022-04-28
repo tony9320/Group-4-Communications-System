@@ -293,7 +293,7 @@ class Server {
 							case "LEAVECHATROOM": { 
 								for (int i = 0; i < allChatRooms.size(); i++) {
 									if (allChatRooms.get(i).getRoomName().equals(localUser.getActiveChatRoom())) {
-											localUser.setActiveChatRoom(null);
+											localUser.setActiveChatRoom("");
 											allChatRooms.get(i).decrementActiveUsers();
 											break;
 									}
@@ -309,9 +309,7 @@ class Server {
 							case "LOCKCHAT": {
 								for (int i = 0; i < allChatRooms.size(); i++) {
 									if (allChatRooms.get(i).getRoomName().equals(localUser.getActiveChatRoom())) {
-										allChatRooms.get(i).setChatLock(localUser);  
-										Message returnMessage = new Message("LOCKCHAT", "VERIFIED", "The room will be locked if you are the Chat Room owner!");
-										objectOutputStream.writeObject(returnMessage);
+										allChatRooms.get(i).setChatLock(localUser, messageFromClient, objectOutputStream);  
 										break;
 									}
 								}
@@ -322,9 +320,7 @@ class Server {
 							case "UNLOCKCHAT": {  
 								for (int i = 0; i < allChatRooms.size(); i++) {
 									if (allChatRooms.get(i).getRoomName().equals(localUser.getActiveChatRoom())) {
-										allChatRooms.get(i).setChatUnlock(localUser);  
-										Message returnMessage = new Message("UNLOCKCHAT", "VERIFIED", "The room will be unlocked if you are the Chat Room owner!");
-										objectOutputStream.writeObject(returnMessage);
+										allChatRooms.get(i).setChatUnlock(localUser, messageFromClient, objectOutputStream);  
 										break;
 									}
 								}
@@ -391,6 +387,12 @@ class Server {
 							
 							
 								System.out.println("TYPE: DELETEUSER");
+								break;
+							}
+
+							case "LOGOUT": { 
+								clientSocket.close();
+								localUser.setActiveChatRoom("");
 								break;
 							}
 

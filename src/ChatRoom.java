@@ -62,9 +62,10 @@ class ChatRoom {
     	for(int i = 0; i < this.chatUsers.size(); i++) { 
 			if (chatUsers.get(i) == null) {
 				chatUsers.remove(i);
+				continue;
 			}										// loop through all users
     		if(chatUsers.get(i).getActiveChatRoom().equals(this.roomName) &&					//user is in current chatroom
-    				!chatUsers.get(i).equals(null) && !chatUsers.get(i).getActiveChatRoom().equals(null)) {											//user is not null
+    				!chatUsers.get(i).getActiveChatRoom().equals(null)) {											//user is not null
     			try {
     				ObjectOutputStream outStream = outputStreams.get(chatUsers.get(i).getName());	//get Output Stream
 					outStream.writeObject(message);												//send message through stream
@@ -130,25 +131,47 @@ class ChatRoom {
 			}//catch
 	}//reloadHistoryForUser()
 
-    public void setChatLock(User user) {
+    public void setChatLock(User user, Message messageFromClient, ObjectOutputStream objectOutputStream) {
     	if(user == this.host) {
     		this.chatLocked = true;
-			System.out.println("CHAT IS LOCKED");
+			Message returnMessage = new Message("LOCKCHAT", "VERIFIED", "The room has been locked!");
+			try {
+				objectOutputStream.writeObject(returnMessage);
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+			}
     	}
     	else {
-    		// NOT HOST SENDING REQUEST
-    		//CHAT REMAINS THE SAME
+			Message returnMessage = new Message("LOCKCHAT", "FAILED", "Only the room host can lock the chat!");
+			try {
+				objectOutputStream.writeObject(returnMessage);
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+			}
     	}
     }
 
-    public void setChatUnlock(User user) {
+    public void setChatUnlock(User user, Message messageFromClient, ObjectOutputStream objectOutputStream) {
     	if(user == this.host) {
     		this.chatLocked = false;
-			System.out.println("CHAT IS UNLOCKED");
+			Message returnMessage = new Message("LOCKCHAT", "VERIFIED", "The room has been unlocked!");
+			try {
+				objectOutputStream.writeObject(returnMessage);
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+			}
     	}
     	else {
-    		// NOT HOST SENDING REQUEST
-    		//CHAT REMAINS THE SAME
+			Message returnMessage = new Message("LOCKCHAT", "FAILED", "Only the room host can unlock the chat!");
+			try {
+				objectOutputStream.writeObject(returnMessage);
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+			}
     	}
     }
 
@@ -183,5 +206,9 @@ class ChatRoom {
 
 	public int getChatUsersSize() {
 		return this.chatUsers.size();
+	}
+
+	public String getOwner() {
+		return host.getName();
 	}
 }//class
