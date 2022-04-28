@@ -44,6 +44,9 @@ public class testHomePanel extends JPanel {
 		JPanel center = createCenterPanel();
 		add(center, BorderLayout.CENTER);
 		
+		JPanel east = createExitPanel();
+		add(east, BorderLayout.EAST);
+		
 		return this;
 	}
 	
@@ -92,6 +95,9 @@ public class testHomePanel extends JPanel {
 
 		JPanel center = createCenterPanel();
 		add(center, BorderLayout.CENTER);
+		
+		JPanel east = createExitPanel();
+		add(east, BorderLayout.EAST);
 		
 		return this;
 	}
@@ -482,5 +488,25 @@ public class testHomePanel extends JPanel {
 		
 		return p;
 	}
+		
+		public JPanel createExitPanel()
+		{
+			JPanel exitP = new JPanel();
+			JButton exitB = new JButton("Exit");
+			exitP.add(exitB);
+
+			exitB.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					tgui.logOut();
+					
+					System.exit(ABORT);
+
+				}
+			});
+
+			return exitP;
+		}
 	
 }

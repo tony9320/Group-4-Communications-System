@@ -376,7 +376,12 @@ public class testClientGUI extends JFrame {
 		client.leaveChatroom(roomName);
 
 	}
-
+	
+	public void logOut()
+	{
+		client.logOut();
+	}
+	
 	//Handles chat threads
 	private static class ReceiveMessages implements Runnable {
 		private final Socket clientSocket;

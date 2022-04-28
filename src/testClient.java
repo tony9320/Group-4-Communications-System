@@ -218,6 +218,24 @@ import java.io.*;
 			return logMessage;
 		}
 		
+		public void logOut()
+		{
+			
+			Message logMessage = new Message();
+			logMessage.setType("LOGOUT");
+			
+			try {
+				objectOutputStream.writeObject(logMessage);
+				socket.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			
+			
+		}
+		
 		private Message sendMessage(Message message)
 		{
 			try {
