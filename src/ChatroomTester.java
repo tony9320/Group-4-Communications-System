@@ -1,16 +1,28 @@
 import static org.junit.jupiter.api.Assertions.*;
+
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+
 import org.junit.jupiter.api.Test;
 
 public class ChatroomTester {
 
 	@Test
 	public void testAddUser() {
-		User user1 = new User();
-		User user2 = new User();
-		Message myMessage = new Message();
-		ChatRoom myChatroom = new ChatRoom(user1,myMessage,null);
-		myChatroom.addUser(user2, null);
-		assertTrue(myChatroom.getChatUsersSize() == 2);
+		try {
+			FileOutputStream justNeedAnOutputStream = new FileOutputStream("b");
+			ObjectOutputStream objectOutputStream = new ObjectOutputStream(justNeedAnOutputStream);
+			User user1 = new User();
+			User user2 = new User();
+			Message myMessage = new Message();
+			ChatRoom myChatroom = new ChatRoom(user1,myMessage,objectOutputStream);
+			myChatroom.addUser(user2, objectOutputStream);
+			assertTrue(myChatroom.getChatUsersSize() == 2);
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	@Test
@@ -34,9 +46,17 @@ public class ChatroomTester {
 		User user1 = new User();
 		Message myMessage = new Message("hello","MyChatRoom");
 		ChatRoom myChatroom = new ChatRoom(user1,myMessage,null);
-		
-		myChatroom.setChatLock(user1);
-		assertTrue(myChatroom.isLocked() == true);
+		try {
+			FileOutputStream justNeedAnOutputStream = new FileOutputStream("b");
+			ObjectOutputStream objectOutputStream = new ObjectOutputStream(justNeedAnOutputStream);
+			myChatroom.setChatLock(user1, myMessage, objectOutputStream);
+			assertTrue(myChatroom.isLocked() == true);
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+
+
 	}
 	
 	@Test
@@ -44,24 +64,37 @@ public class ChatroomTester {
 		User user1 = new User();
 		Message myMessage = new Message("hello","MyChatRoom");
 		ChatRoom myChatroom = new ChatRoom(user1,myMessage,null);
-		
-		myChatroom.setChatLock(user1);
-		myChatroom.setChatUnlock(user1);
-		assertTrue(myChatroom.isLocked() == false);
+		try {
+			FileOutputStream justNeedAnOutputStream = new FileOutputStream("b");
+			ObjectOutputStream objectOutputStream = new ObjectOutputStream(justNeedAnOutputStream);
+			myChatroom.setChatLock(user1, myMessage, objectOutputStream);
+			myChatroom.setChatLock(user1, myMessage, objectOutputStream);
+			myChatroom.setChatUnlock(user1, myMessage, objectOutputStream);
+			assertTrue(myChatroom.isLocked() == false);
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	@Test
 	public void testRemoveUser() {
-		User user1 = new User();
-		User user2 = new User();
-		User user3 = new User();
-		Message myMessage = new Message("hello","MyChatRoom");
-		ChatRoom myChatroom = new ChatRoom(user1,myMessage,null);
-		myChatroom.addUser(user2, null);
-		myChatroom.addUser(user3, null);
-		myChatroom.removeUser(user2);
-		
-		assertTrue(myChatroom.getChatUsersSize() == 2);
+		try {
+			FileOutputStream justNeedAnOutputStream = new FileOutputStream("b");
+			ObjectOutputStream objectOutputStream = new ObjectOutputStream(justNeedAnOutputStream);
+			User user1 = new User();
+			User user2 = new User();
+			User user3 = new User();
+			Message myMessage = new Message("hello","MyChatRoom");
+			ChatRoom myChatroom = new ChatRoom(user1,myMessage,objectOutputStream);
+			myChatroom.addUser(user2, objectOutputStream);
+			myChatroom.addUser(user3, objectOutputStream);
+			myChatroom.removeUser(user2);
+			assertTrue(myChatroom.getChatUsersSize() == 2);
+		}
+		catch(IOException e) {
+			
+		}
 		
 	}
 	
