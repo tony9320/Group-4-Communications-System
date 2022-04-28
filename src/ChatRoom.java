@@ -117,7 +117,7 @@ class ChatRoom {
 					    //TODO PRINT ONTO GUI
 					}//while
 
-					Message message = new Message("CHATROOM", "VERIFIED", null);
+					Message message = new Message("HISTORY", "VERIFIED", null);
 					message.setText(longString);
 					os.writeObject(message);
 				}//try
