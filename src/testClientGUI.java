@@ -377,6 +377,11 @@ public class testClientGUI extends JFrame {
 
 	}
 	
+	public void reloadChat()
+	{
+		client.reloadChat();
+	}
+	
 	public void logOut()
 	{
 		client.logOut();
@@ -421,18 +426,17 @@ public class testClientGUI extends JFrame {
 					System.out.println("Ending thread");
 					break;
 				} 
-				else //Handle lock/unlock messages
+				else if(replyMessage.getType().equals("LOCKCHAT") || replyMessage.getType().equals("UNLOCKCHAT"))//Handle lock/unlock messages
 				{
-					if(replyMessage.getType().equals("LOCKCHAT"))
-					{
-						homePanel.display(replyMessage.getText());
-						homePanel.displayLine();
-					}
-					else if (replyMessage.getType().equals("UNLOCKCHAT"))
-					{
-						homePanel.display(replyMessage.getText());
-						homePanel.displayLine();
-					}
+					
+					homePanel.display(replyMessage.getText());
+					homePanel.displayLine();
+				
+				}
+				else if(replyMessage.getType().equals("HISTORY"))
+				{
+					homePanel.display(replyMessage.getText());
+					homePanel.displayLine();
 				}
 				
 			}
