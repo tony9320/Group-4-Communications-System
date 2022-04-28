@@ -132,9 +132,14 @@ class ChatRoom {
 	}//reloadHistoryForUser()
 
     public void setChatLock(User user, Message messageFromClient, ObjectOutputStream objectOutputStream) {
+		Message returnMessage;
     	if(user == this.host) {
     		this.chatLocked = true;
-			Message returnMessage = new Message("LOCKCHAT", "VERIFIED", "The room has been locked!");
+			if (!this.isLocked())
+				returnMessage = new Message("LOCKCHAT", "VERIFIED", "The room has been locked!");
+			else 
+				returnMessage = new Message("LOCKCHAT", "VERIFIED", "The room is already locked....");
+
 			try {
 				objectOutputStream.writeObject(returnMessage);
 			}
@@ -143,7 +148,7 @@ class ChatRoom {
 			}
     	}
     	else {
-			Message returnMessage = new Message("LOCKCHAT", "FAILED", "Only the room host can lock the chat!");
+			returnMessage = new Message("LOCKCHAT", "FAILED", "Only the room host can lock the chat!");
 			try {
 				objectOutputStream.writeObject(returnMessage);
 			}
@@ -154,9 +159,13 @@ class ChatRoom {
     }
 
     public void setChatUnlock(User user, Message messageFromClient, ObjectOutputStream objectOutputStream) {
+		Message returnMessage;
     	if(user == this.host) {
     		this.chatLocked = false;
-			Message returnMessage = new Message("LOCKCHAT", "VERIFIED", "The room has been unlocked!");
+			if (!this.isLocked())
+				returnMessage = new Message("LOCKCHAT", "VERIFIED", "The room has been unlocked!");
+			else 
+				returnMessage = new Message("LOCKCHAT", "VERIFIED", "The room is already unlocked....");
 			try {
 				objectOutputStream.writeObject(returnMessage);
 			}
@@ -165,7 +174,7 @@ class ChatRoom {
 			}
     	}
     	else {
-			Message returnMessage = new Message("LOCKCHAT", "FAILED", "Only the room host can unlock the chat!");
+			returnMessage = new Message("LOCKCHAT", "FAILED", "Only the room host can unlock the chat!");
 			try {
 				objectOutputStream.writeObject(returnMessage);
 			}
