@@ -129,7 +129,7 @@ class Server {
 								boolean success = joinChatRoom(messageFromClient, objectOutputStream);
 								
 								if (!success) {
-									messageFromClient.setStatus("FAILED");;
+									messageFromClient.setStatus("FAILED");
 									objectOutputStream.writeObject(messageFromClient);
 								}
 								
@@ -165,11 +165,19 @@ class Server {
 							}
 
 							case "CHANGEPASSWORD": { 
+								if (messageFromClient.getText() == null) {
+									messageFromClient.setStatus("FAILED");
+									messageFromClient.setText("NULL password not allowed!");
+									objectOutputStream.writeObject(messageFromClient);
+
+									break;
+								}
+	
 								localUser.changePassword(messageFromClient.getText());
 								messageFromClient.setStatus("VERIFIED");
 								objectOutputStream.writeObject(messageFromClient);
 								updateUserFile();
-
+								
 								System.out.println("TYPE: CHANGEPASSWORD");
 								break;
 							}
@@ -253,7 +261,7 @@ class Server {
 								String [] listOfUsers = new String[allUsers.size()];
 								System.out.println(allUsers.size());
 								for (int i = 0; i < allUsers.size(); i++) {
-									listOfUsers[i] = allUsers.get(i).getName() + " | Active in: " + allUsers.get(i).getActiveChatRoom() + "\n";
+									listOfUsers[i] = allUsers.get(i).getName() + " | Active in: " + allUsers.get(i).getActiveChatRoom();
 								}
 								
 								messageFromClient.setRoomList(listOfUsers);
@@ -270,8 +278,6 @@ class Server {
 									if (allChatRooms.get(i).getRoomName().equals(localUser.getActiveChatRoom())) {
 											localUser.setActiveChatRoom(null);
 											allChatRooms.get(i).decrementActiveUsers();
-											messageFromClient.setStatus("VERIFIED");
-											objectOutputStream.writeObject(messageFromClient);
 											break;
 									}
 								}
@@ -526,11 +532,12 @@ class Server {
 		}
 
 		public boolean joinChatRoom(Message messageFromClient, ObjectOutputStream objectOutputStream) {
-			messageFromClient.setText(messageFromClient.getText().toUpperCase());
-			try {
+				messageFromClient.setText(messageFromClient.getText().toUpperCase());
+
 				for (int i = 0; i < allChatRooms.size(); i++) {
 					if (allChatRooms.get(i).getRoomName().equals(messageFromClient.getText())) {
 						if (allChatRooms.get(i).isLocked()) {
+							System.out.println("Chat is locked");
 							messageFromClient.setText("That ChatRoom is locked!");
 
 							return false;
@@ -539,8 +546,6 @@ class Server {
 							allChatRooms.get(i).addUser(localUser, objectOutputStream);
 							localUser.setActiveChatRoom(messageFromClient.getText());
 							allChatRooms.get(i).incrementActiveUsers();
-							messageFromClient.setStatus("VERIFIED");
-							objectOutputStream.writeObject(messageFromClient);
 
 							return true;
 						}
@@ -552,13 +557,8 @@ class Server {
 					}
 				}
 
+				messageFromClient.setText("Unknown error occured");
 				return false;
-			}
-			catch (IOException e) {
-				e.printStackTrace();
-				messageFromClient.setText("IOException thrown.");
-				return false;
-			}
 		}
 
 		public void loadUsers(ArrayList<User> allUsers) {
