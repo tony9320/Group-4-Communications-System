@@ -57,8 +57,6 @@ class Server {
 		public ClientHandler(Socket socket) {
 			this.clientSocket = socket;
 			System.out.println("New thread created");
-			System.out.println("Number of connect clients: " + (userNum + 1));;
-
 			if (userNum == 0) {
 				loadUsers(allUsers);
 			}
@@ -193,9 +191,7 @@ class Server {
 									break;
 								}
 
-								boolean failed = false;
 								User newUser;
-
 								// Only Supervisors may add Users!
 								if (!(localUser instanceof Supervisor)) {
 									messageFromClient.setStatus("FAILED");
@@ -213,24 +209,21 @@ class Server {
 								String[] userPass = messageFromClient.getText().split("/");
 								
 								// Checks if the name is taken
-								for (int i = 0; i < allUsers.size(); i++) {
-									if (allUsers.get(i).getName().equals(userPass[0])) {
-										messageFromClient.setStatus("FAILED");
-										messageFromClient.setText("This User already exists.");
-										objectOutputStream.writeObject(messageFromClient);
-										failed = true;
-										break;
-									}
-								}
+								boolean nameTaken = nameTaken(userPass);
 								
 								// The User does not already exist and can be added
-								if (!failed) {
+								if (!nameTaken) {
 									newUser = new User(userPass[0], userPass[1]);
 									allUsers.add(newUser); 
 									messageFromClient.setStatus("VERIFIED");
 									System.out.println("New user created");
 									objectOutputStream.writeObject(messageFromClient);
 									saveUser(newUser);
+								}
+								else {
+									messageFromClient.setStatus("FAILED");
+									messageFromClient.setText("This User already exists.");
+									objectOutputStream.writeObject(messageFromClient);
 								}
 							
 								System.out.println("TYPE: CREATEUSER");
@@ -247,7 +240,6 @@ class Server {
 									break;
 								}
 
-								boolean failed = false;
 								Supervisor newSupervisor = null;
 
 								// Only Supervisors may add Supervisors!
@@ -260,22 +252,21 @@ class Server {
 								
 								String[] userPass = messageFromClient.getText().split("/");
 
-								for (int i = 0; i < allUsers.size(); i++) {
-									if (allUsers.get(i).getName().equals(userPass[0])) {
-										messageFromClient.setStatus("FAILED");
-										messageFromClient.setText("This User already exists.");
-										objectOutputStream.writeObject(messageFromClient);
-										failed = true;	
-										break;
-									}
-								}
-			
-								if (!failed) {
-									// The User does not already exist and can be added
+								// Checks if the name is taken
+								boolean nameTaken = nameTaken(userPass);
+								
+								// The User does not already exist and can be added
+								if (!nameTaken) {
 									newSupervisor = new Supervisor(userPass[0], userPass[1]);
-									allUsers.add(newSupervisor); // They do not yet have an output stream or active chat room
+									allUsers.add(newSupervisor); 
 									messageFromClient.setStatus("VERIFIED");
+									System.out.println("New Supervisor created");
+									objectOutputStream.writeObject(messageFromClient);
 									saveUser(newSupervisor);
+								}
+								else {
+									messageFromClient.setStatus("FAILED");
+									messageFromClient.setText("This User already exists.");
 									objectOutputStream.writeObject(messageFromClient);
 								}
 						
@@ -437,7 +428,6 @@ class Server {
 
 		}
 
-	
 		public boolean authenticate(Message loginMessage, ObjectOutputStream objectOutputStream) {
 			String[] values;
 			boolean success = false;
@@ -487,6 +477,16 @@ class Server {
 				e.printStackTrace();
 				return false;
 			}
+		}
+
+		public boolean nameTaken(String[] userPass) {
+			for (int i = 0; i < allUsers.size(); i++) {
+				if (allUsers.get(i).getName().equals(userPass[0])) {
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		public void saveUser(User newUser) {
