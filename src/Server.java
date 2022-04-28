@@ -43,7 +43,7 @@ class Server {
 	private static class ClientHandler implements Runnable {
 		private final Socket clientSocket;
 		private User localUser;
-		private boolean authenticated = false;
+		private boolean authenticated;
 		private File chatHistory = new File("logs");
 		
 		private static ArrayList<User> allUsers = new ArrayList<User>();
@@ -77,78 +77,18 @@ class Server {
 				OutputStream outputStream = clientSocket.getOutputStream();
 				ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
 
+				// Attempting to authenticate based on the first login attempt
 				Message loginMessage;
 				loginMessage = (Message) objectInputStream.readObject();
-				System.out.println(loginMessage.getText());
-
-
-				String[] values = loginMessage.getText().split("/");
-				System.out.println(values[0] + " " + values[1]);
-
-				// Attempting to authenticate based on the first login attempt
-				for (int i = 0; i < allUsers.size(); i++) {
-					System.out.println(allUsers.size());
-					if (allUsers.get(i).getName().equals(values[0])) {
-						if (allUsers.get(i).getPassword().equals(values[1])) {
-							localUser = allUsers.get(i);
-							localUser.setObjectOutputStream(objectOutputStream);
-							outputStreams.replace(localUser.getName(), objectOutputStream);
-							System.out.println("User verified");
-							authenticated = true;
-
-							Message verifiedMessage = new Message("LOGIN", "VERIFIED", "YOU ARE VERIFIED");
-							objectOutputStream.writeObject(verifiedMessage);
-							break;
-						}
-						else {
-							Message failureMessage = new Message("LOGIN", "FAILED", "WRONG PASSWORD");
-							objectOutputStream.writeObject(failureMessage);
-							System.out.println("WRONG PASSWORD :" + values[1]);
-						}
-					}
-				}
-
-				if (!authenticated) {
-					Message failureMessage = new Message("LOGIN", "FAILED", "USERNAME NOT FOUND");
-					objectOutputStream.writeObject(failureMessage);
-				}
+				authenticated = authenticate(loginMessage, objectOutputStream);
 				
-				// **** USER AUTHENTICATION, CREATE THE USER OBJECT AND SET ITS ATTRIBUTES ****
+				// Subsequent authentication attempts
 				while (!authenticated) {
-					System.out.println("First auth failed");
 					loginMessage = (Message) objectInputStream.readObject();
-					values = loginMessage.getText().split("/");
-					System.out.println(values[0] + " " + values[1]);
-
-					for (int i = 0; i < allUsers.size(); i++) {
-						System.out.println(allUsers.size());
-						if (allUsers.get(i).getName().equals(values[0])) {
-							if (allUsers.get(i).getPassword().equals(values[1])) {
-								localUser = allUsers.get(i);
-								outputStreams.replace(localUser.getName(), objectOutputStream);
-								localUser.setObjectOutputStream(objectOutputStream);
-								System.out.println("User verified");
-								authenticated = true;
-	
-								Message verifiedMessage = new Message("LOGIN", "VERIFIED", "YOU ARE VERIFIED");
-								objectOutputStream.writeObject(verifiedMessage);
-								break;
-							}
-							else {
-								Message verifiedMessage = new Message("LOGIN", "FAILED", "WRONG PASSWORD");;
-								objectOutputStream.writeObject(verifiedMessage);
-								System.out.println("WRONG PASSWORD :" + values[1]);
-							}
-						}
-					}
-
-					if (!authenticated) {
-						Message failureMessage = new Message("LOGIN", "FAILED", "USERNAME NOT FOUND");
-						objectOutputStream.writeObject(failureMessage);
-						objectOutputStream.writeObject(failureMessage);
-					}
-			    }
-				
+					authenticated = authenticate(loginMessage, objectOutputStream);
+					System.out.println("In authenticated loop");
+					
+				}
 
 				// Reading the message from the client thread
 				try {
@@ -168,91 +108,27 @@ class Server {
 						
 						switch (messageFromClient.getType()) {
 							case "CHATROOM": {
-								boolean failed = false;
-
-								for (int i = 0; i < allChatRooms.size(); i++) {
-									if (allChatRooms.get(i).getRoomName().equals(localUser.getActiveChatRoom())) {
-										messageFromClient.setText(localUser.getName() + ": " + messageFromClient.getText());
-										allChatRooms.get(i).sendMessage(messageFromClient);
-										logMessage(messageFromClient, localUser.getActiveChatRoom());
-										Message sendReceipt = new Message("CHATROOM", "VERIFIED", "Sent");
-										if (allChatRooms.get(i).getActiveUserCount() > 1) {
-											sendReceipt.setText("Message read");
-										}
-										objectOutputStream.writeObject(sendReceipt);
-										break;
-									}
-									else if ((i == allChatRooms.size() - 1)) {
-										System.out.println("END OF LINE");
-										failed = true;
-									}
-								}
-
-								if (failed) {
+								boolean success = chatroom(messageFromClient);
+								if (!success) {
 									Message sendReceipt = new Message("CHATROOM", "FAILED", "Chat Room not found.");
 									objectOutputStream.writeObject(sendReceipt);
 								}						
-								
 								System.out.println("TYPE: CHATROOM");
+
 								break;
 							}
 												
 							case "DISPLAYCHATROOMS": {
-								String[] roomNames;
-
-								if (allChatRooms.size() == 0) {
-									roomNames = new String[1];
-									roomNames[0] = "No active chat rooms!";
-									messageFromClient.setRoomList(roomNames);
-									messageFromClient.setStatus("VERIFIED");
-									objectOutputStream.writeObject(messageFromClient);
-									break;
-								}
-								roomNames = new String[allChatRooms.size()];
-								for (int i = 0; i < allChatRooms.size(); i++) {
-									roomNames[i] = allChatRooms.get(i).getRoomName();
-									for (int j = 0; j < allUsers.size(); j++) {
-										if (allUsers.get(j).getActiveChatRoom().equals(roomNames[i])) {
-											roomNames[i] += "\nUser " + (i + 1) + ": " + allUsers.get(j).getName();
-										}
-									}
-								}
-								messageFromClient.setRoomList(roomNames);
-								messageFromClient.setStatus("VERIFIED");
-								objectOutputStream.writeObject(messageFromClient);
-								
-								
+								displayChatRooms(messageFromClient, objectOutputStream);
 								System.out.println("TYPE: DISPLAYCHATROOM");
+
 								break;
 							}
 
 							case "JOINCHATROOM": {
-								boolean failed = true;
-								messageFromClient.setText(messageFromClient.getText().toUpperCase());
-								for (int i = 0; i < allChatRooms.size(); i++) {
-									if (allChatRooms.get(i).getRoomName().equals(messageFromClient.getText())) {
-										if (allChatRooms.get(i).isLocked()) {
-											messageFromClient.setText("That ChatRoom is locked!");
-											break;
-										}
-										else {
-											allChatRooms.get(i).addUser(localUser, objectOutputStream);
-											localUser.setActiveChatRoom(messageFromClient.getText());
-											allChatRooms.get(i).incrementActiveUsers();
-											messageFromClient.setStatus("VERIFIED");
-											objectOutputStream.writeObject(messageFromClient);
-											failed = false;
-											break;
-										}
-									}
-									else if ((i == allChatRooms.size() - 1)) {
-										System.out.println("END OFLINE");
-										messageFromClient.setText("That ChatRoom does not exist.");
-										failed = true;
-									}
-								}
+								boolean success = joinChatRoom(messageFromClient, objectOutputStream);
 								
-								if (failed) {
+								if (!success) {
 									messageFromClient.setStatus("FAILED");;
 									objectOutputStream.writeObject(messageFromClient);
 								}
@@ -396,8 +272,12 @@ class Server {
 											allChatRooms.get(i).decrementActiveUsers();
 											messageFromClient.setStatus("VERIFIED");
 											objectOutputStream.writeObject(messageFromClient);
+											break;
 									}
 								}
+
+								messageFromClient.setStatus("VERIFIED");
+								objectOutputStream.writeObject(messageFromClient);
 								
 								System.out.println("TYPE: LEAVECHATROOM");						
 								break;
@@ -510,6 +390,65 @@ class Server {
 			}
 		}
 
+		public boolean authenticate(Message loginMessage, ObjectOutputStream objectOutputStream) {
+			String[] values;
+			boolean success = false;
+			Message failureMessage;
+			try {
+				if (loginMessage.getText().equals("/")) {
+					failureMessage = new Message("LOGIN", "FAILED", "USERNAME AND PASSWORD ARE NULL");
+					objectOutputStream.writeObject(failureMessage);
+					return false;
+				}
+				else {
+					char first = loginMessage.getText().charAt(loginMessage.getText().length() - 1);
+					char last = loginMessage.getText().charAt(0);
+					if (first == '/' || last == '/') {
+						failureMessage = new Message("LOGIN", "FAILED", "NULL USER OR PASSWORD PASSED");
+						objectOutputStream.writeObject(failureMessage);
+						return false;
+					}
+
+					values = loginMessage.getText().split("/");
+					for (int i = 0; i < allUsers.size(); i++) {
+						System.out.println(allUsers.size());
+						if (allUsers.get(i).getName().equals(values[0])) {
+							if (allUsers.get(i).getPassword().equals(values[1])) {
+								localUser = allUsers.get(i);
+								localUser.setObjectOutputStream(objectOutputStream);
+								outputStreams.replace(localUser.getName(), objectOutputStream);
+								System.out.println("User verified");
+								success = true;
+
+								Message verifiedMessage = new Message("LOGIN", "VERIFIED", "YOU ARE VERIFIED");
+								objectOutputStream.writeObject(verifiedMessage);
+								return true;
+							}
+							else {
+								failureMessage = new Message("LOGIN", "FAILED", "WRONG PASSWORD");
+								objectOutputStream.writeObject(failureMessage);
+								return false;
+							}
+						}
+					}
+				}
+
+				if (!success) {
+					failureMessage = new Message("LOGIN", "FAILED", "USERNAME NOT FOUND");
+					objectOutputStream.writeObject(failureMessage);
+					return false;
+				}
+
+				failureMessage = new Message("LOGIN", "FAILED", "UNKNOWN FAILURE");
+				objectOutputStream.writeObject(failureMessage);
+				return false;
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+				return false;
+			}
+		}
+
 		public void saveUser(User newUser) {
 			try {
 				FileWriter writer = new FileWriter("..\\src\\users.txt", true);
@@ -530,6 +469,96 @@ class Server {
 			}
 
 			return;
+		}
+
+		public boolean chatroom(Message messageFromClient) {
+			for (int i = 0; i < allChatRooms.size(); i++) {
+				if (allChatRooms.get(i).getRoomName().equals(localUser.getActiveChatRoom())) {
+					messageFromClient.setText(localUser.getName() + ": " + messageFromClient.getText());
+					allChatRooms.get(i).sendMessage(messageFromClient);
+					logMessage(messageFromClient, localUser.getActiveChatRoom());
+					return true;
+				}
+				else if ((i == allChatRooms.size() - 1)) {
+					System.out.println("END OF LINE");
+					return false;
+				}
+			}
+
+			return false;
+		}
+
+		public void displayChatRooms(Message messageFromClient, ObjectOutputStream objectOutputStream) {
+			String[] roomNames;
+			try {
+				if (allChatRooms.size() == 0) {
+					roomNames = new String[1];
+					roomNames[0] = "No active chat rooms!";
+					messageFromClient.setRoomList(roomNames);
+					messageFromClient.setStatus("VERIFIED");
+					objectOutputStream.writeObject(messageFromClient);
+					return;
+				}
+
+				roomNames = new String[allChatRooms.size()];
+				// Iterate through all ChatRooms
+				for (int i = 0; i < allChatRooms.size(); i++) {
+					roomNames[i] = allChatRooms.get(i).getRoomName();
+
+					//Iterate through all Users and check if they are active in the above room
+					for (int j = 0; j < allUsers.size(); j++) {
+						if (allUsers.get(j).getActiveChatRoom() != null) {
+							if (allUsers.get(j).getActiveChatRoom().equals(allChatRooms.get(i).getRoomName())) {
+								roomNames[i] += "\nUser " + (i + 1) + ": " + allUsers.get(j).getName();
+							}
+						}
+					}
+				}
+				messageFromClient.setRoomList(roomNames);
+				messageFromClient.setStatus("VERIFIED");
+				objectOutputStream.writeObject(messageFromClient);
+
+				return;
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		public boolean joinChatRoom(Message messageFromClient, ObjectOutputStream objectOutputStream) {
+			messageFromClient.setText(messageFromClient.getText().toUpperCase());
+			try {
+				for (int i = 0; i < allChatRooms.size(); i++) {
+					if (allChatRooms.get(i).getRoomName().equals(messageFromClient.getText())) {
+						if (allChatRooms.get(i).isLocked()) {
+							messageFromClient.setText("That ChatRoom is locked!");
+
+							return false;
+						}
+						else {
+							allChatRooms.get(i).addUser(localUser, objectOutputStream);
+							localUser.setActiveChatRoom(messageFromClient.getText());
+							allChatRooms.get(i).incrementActiveUsers();
+							messageFromClient.setStatus("VERIFIED");
+							objectOutputStream.writeObject(messageFromClient);
+
+							return true;
+						}
+					}
+					else if ((i == allChatRooms.size() - 1)) {
+						System.out.println("END OFLINE");
+						messageFromClient.setText("That ChatRoom does not exist.");
+						return false;
+					}
+				}
+
+				return false;
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+				messageFromClient.setText("IOException thrown.");
+				return false;
+			}
 		}
 
 		public void loadUsers(ArrayList<User> allUsers) {
