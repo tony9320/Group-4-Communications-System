@@ -47,6 +47,13 @@ class ChatRoom {
     	if(found == false) {												//if not found add to list
     		this.chatUsers.add(user);
 			outputStreams.put(user.getName(), objectOutputStream);
+			try {
+				Message receipt = new Message("JOINCHATROOM", "Verified", "get in there!");
+				objectOutputStream.writeObject(receipt);
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+			}
     	}//if
     }//addUser()
 
@@ -57,7 +64,7 @@ class ChatRoom {
 				chatUsers.remove(i);
 			}										// loop through all users
     		if(chatUsers.get(i).getActiveChatRoom().equals(this.roomName) &&					//user is in current chatroom
-    				!chatUsers.get(i).equals(null)) {											//user is not null
+    				!chatUsers.get(i).equals(null) && !chatUsers.get(i).getActiveChatRoom().equals(null)) {											//user is not null
     			try {
     				ObjectOutputStream outStream = outputStreams.get(chatUsers.get(i).getName());	//get Output Stream
 					outStream.writeObject(message);												//send message through stream
