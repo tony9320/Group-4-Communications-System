@@ -156,7 +156,7 @@ public class testHomePanel extends JPanel {
 				String roomName = JOptionPane.showInputDialog("Enter chat room name: ");
 				if(tgui.createChatRoom(roomName))
 				{
-					tgui.displayChat("CREATED Chat Room: " + roomName);
+					tgui.displayChat("CREATED Chat Room: " + roomName, true);
 				}
 				
 			}
@@ -252,11 +252,12 @@ public class testHomePanel extends JPanel {
 							{
 								if(getMessage.getType().equals("HISTORY") && getMessage.getText() != "") //reload chat history
 								{
-									tgui.displayChat(getMessage.getText());
+									tgui.displayChat("Welcome to Chat Room " + t + "!\n", false);
+									
 								}
 								else	//first time in chat, display welcome message
 								{
-									tgui.displayChat("Welcome to Chat Room " + t + "!");
+									tgui.displayChat("Welcome to Chat Room " + t + "!", true);
 								}
 							}
 							else
@@ -318,7 +319,7 @@ public class testHomePanel extends JPanel {
 	
 	private JPanel createWestChatPanel()
 	{
-		JPanel west = new JPanel(new GridLayout(4,1));
+		JPanel west = new JPanel(new GridLayout(5,1));
 		
 		JButton lockRoomB = new JButton("Lock Chat Room");
 		west.add(lockRoomB);
@@ -357,6 +358,15 @@ public class testHomePanel extends JPanel {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				displayTA.setText("");
+			}
+		});
+		JButton displayUsersB = new JButton("Display Chat Users");
+		west.add(displayUsersB);
+		displayUsersB.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				tgui.displayChatUsers();
 			}
 		});
 		
