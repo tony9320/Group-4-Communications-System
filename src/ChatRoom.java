@@ -48,7 +48,7 @@ class ChatRoom {
     		this.chatUsers.add(user);
 			outputStreams.put(user.getName(), objectOutputStream);
 			try {
-				Message receipt = new Message("JOINCHATROOM", "Verified", "get in there!");
+				Message receipt = new Message("JOINCHATROOM", "VERIFIED", "get in there!");
 				objectOutputStream.writeObject(receipt);
 			}
 			catch (IOException e) {
@@ -117,7 +117,7 @@ class ChatRoom {
 					    //TODO PRINT ONTO GUI
 					}//while
 
-					Message message = new Message();
+					Message message = new Message("CHATROOM", "VERIFIED", null);
 					message.setText(longString);
 					os.writeObject(message);
 				}//try
@@ -176,6 +176,9 @@ class ChatRoom {
 
 	public void decrementActiveUsers() {
 		activeUserCount--;
+		if (activeUserCount == 0) {
+			chatLocked = false;
+		}
 	}
 
 	public int getChatUsersSize() {
