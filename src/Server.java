@@ -674,23 +674,11 @@ class Server {
 			try {
 				BufferedReader reader;
 				User newUser = null;
+				String[] values;
 
 				reader = new BufferedReader(new FileReader("..\\src\\users.txt"));
 				String line = reader.readLine();
 				
-				String[] values = line.split("/");
-				if (values[0].equals("S")) {
-					newUser = new Supervisor(values[1], values[2]);
-					System.out.println(values[1] + values[2]);
-				}
-				else {
-					newUser = new User(values[1], values[2]);
-					System.out.println(values[1] + values[2]);
-				}
-				allUsers.add(newUser);
-
-				line = reader.readLine();
-			
 				while (line != null) {	
 					values = line.split("/");
 					if (values[0].equals("S")) {
@@ -770,4 +758,3 @@ class Server {
 	
 	}
 }
-
