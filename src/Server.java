@@ -461,6 +461,8 @@ class Server {
 					}
 				}
 				catch (Exception e) {
+					//Just in case user closes client while in a chatroom
+					localUser.setActiveChatRoom("");
 					e.printStackTrace();
 				}
 			}
