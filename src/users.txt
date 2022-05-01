@@ -1,4 +1,5 @@
-S/admin/admin
-U/owen/owen
-U/bob/bob
-U/user/user
+S/Matty/password
+U/Brianna/password
+U/Owen/password
+U/Max/password
+U/Anthony/password
