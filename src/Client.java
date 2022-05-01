@@ -2,7 +2,7 @@ import java.net.*;
 import java.util.Scanner;
 import java.io.*;
 
-	class testClient {
+	class Client {
 		private Socket socket;
 		private OutputStream outputStream;
 		private InputStream inputStream;
@@ -13,7 +13,7 @@ import java.io.*;
 		private boolean authenticated;
 		private String currentRoom;
 		
-		public testClient()
+		public Client()
 		{	
 			  try {
 				  	socket = new Socket("localhost", 1234);

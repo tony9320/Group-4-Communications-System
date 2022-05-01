@@ -8,15 +8,15 @@ import javax.swing.JOptionPane;
 
 
 
-public class testClientGUI extends JFrame {
+public class ClientGUI extends JFrame {
 
 
 	private String currentUser;
-	private testHomePanel homePanel;
-	private testClient client;
+	private HomePanel homePanel;
+	private Client client;
 	private boolean supervisorStatus;
 	// Constructor.
-	public testClientGUI(testClient myclient) {
+	public ClientGUI(Client myclient) {
 
 		client = myclient;
 		
@@ -39,7 +39,7 @@ public class testClientGUI extends JFrame {
 		// remove old items
 		getContentPane().removeAll();
 		
-		testHomePanel homePanel = new testHomePanel(this);
+		HomePanel homePanel = new HomePanel(this);
 		homePanel = homePanel.constructLoginWindow(type);
 		getContentPane().add(homePanel);
 		setTitle(type);
@@ -94,7 +94,7 @@ public class testClientGUI extends JFrame {
 		getContentPane().removeAll();
 
 		// add home panel
-		homePanel = new testHomePanel(this);
+		homePanel = new HomePanel(this);
 		homePanel = homePanel.constructMainMenu();
 		getContentPane().add(homePanel);
 
@@ -115,7 +115,7 @@ public class testClientGUI extends JFrame {
 		getContentPane().removeAll();
 
 		// add home panel
-		homePanel = new testHomePanel(this);
+		homePanel = new HomePanel(this);
 		homePanel = homePanel.constructSuperWindow();
 		getContentPane().add(homePanel);
 
@@ -132,8 +132,8 @@ public class testClientGUI extends JFrame {
 	
 	public static void main(String[] args) {
 		
-		testClient testClient = new testClient();
-		testClientGUI gui = new testClientGUI(testClient);
+		Client Client = new Client();
+		ClientGUI gui = new ClientGUI(Client);
 		
 		//GUI settings
 		gui.setSize(800, 500); // setting x and y dim of frame
@@ -324,7 +324,7 @@ public class testClientGUI extends JFrame {
 		getContentPane().removeAll();
 		
 		//create a new HomePanel designed for displaying chat rooms
-		homePanel = new testHomePanel(this);
+		homePanel = new HomePanel(this);
 		homePanel = homePanel.constructRoomWindow(replyMessage);
 		
 		getContentPane().add(homePanel);
@@ -342,7 +342,7 @@ public class testClientGUI extends JFrame {
 		getContentPane().removeAll();
 		
 		//Create new HomePanel designed for displaying the chat
-		homePanel = new testHomePanel(this);
+		homePanel = new HomePanel(this);
 		homePanel = homePanel.constructChatWindow(s);
 		
 		getContentPane().add(homePanel);
@@ -405,10 +405,10 @@ public class testClientGUI extends JFrame {
 	private static class ReceiveMessages implements Runnable {
 		private final Socket clientSocket;
         private ObjectInputStream objectInStream;
-		private testHomePanel homePanel;
-		private testClientGUI tgui;
+		private HomePanel homePanel;
+		private ClientGUI tgui;
 		
-		public ReceiveMessages(Socket socket, ObjectInputStream objectInputStream, testHomePanel homeP, testClientGUI tClient) {
+		public ReceiveMessages(Socket socket, ObjectInputStream objectInputStream, HomePanel homeP, ClientGUI tClient) {
 			this.clientSocket = socket;
             this.objectInStream = objectInputStream;
             this.homePanel = homeP;

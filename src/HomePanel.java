@@ -15,11 +15,11 @@ import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SpringLayout;
 
-public class testHomePanel extends JPanel {
+public class HomePanel extends JPanel {
 
 	private JTextArea displayTA;
 	//private ClientGUI gui;
-	private testClientGUI tgui;
+	private ClientGUI tgui;
 	private JTextField usernameTF = new JTextField(15);
 	private JPasswordField passwordF = new JPasswordField(15);
 	
@@ -27,13 +27,13 @@ public class testHomePanel extends JPanel {
 	
 	
 	// Constructor
-	public testHomePanel(testClientGUI ttgui) {
+	public HomePanel(ClientGUI ttgui) {
 		this.tgui = ttgui;
 	}
 
 	
 	
-	public testHomePanel constructMainMenu()
+	public HomePanel constructMainMenu()
 	{
 		setLayout(new BorderLayout());
 		
@@ -50,7 +50,7 @@ public class testHomePanel extends JPanel {
 		return this;
 	}
 	
-	public testHomePanel constructRoomWindow(Message message)
+	public HomePanel constructRoomWindow(Message message)
 	{
 		setLayout(new BorderLayout());
 		
@@ -59,7 +59,7 @@ public class testHomePanel extends JPanel {
 		return this;
 	}
 	
-	public testHomePanel constructChatWindow(String chatroom)
+	public HomePanel constructChatWindow(String chatroom)
 	{
 
 		setLayout(new BorderLayout());
@@ -78,7 +78,7 @@ public class testHomePanel extends JPanel {
 		return this;
 	}
 	
-	public testHomePanel constructLoginWindow(String type)
+	public HomePanel constructLoginWindow(String type)
 	{
 		setLayout(new BorderLayout());
 		JPanel loginP = createLoginPanel(type);
@@ -86,7 +86,7 @@ public class testHomePanel extends JPanel {
 		return this;
 	}
 	
-	public testHomePanel constructSuperWindow()
+	public HomePanel constructSuperWindow()
 	{
 		setLayout(new BorderLayout());
 		
