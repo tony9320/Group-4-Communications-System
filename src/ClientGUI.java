@@ -1,101 +1,140 @@
-
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 
+import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-
-
-
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
 
 public class ClientGUI extends JFrame {
 
-
+	private JTextField usernameTF = new JTextField(15);
+	private JPasswordField passwordF = new JPasswordField(15);
+	private ObjectOutputStream objectOutputStream;
+	private ObjectInputStream objectInputStream;
+	private Socket socket;
 	private String currentUser;
 	private HomePanel homePanel;
-	private Client client;
-	private boolean supervisorStatus;
+	private String currentRoom;
+
 	// Constructor.
-	public ClientGUI(Client myclient) {
+	public ClientGUI() {
 
-		client = myclient;
-		
-		displayLogin("LOGIN");
-		
-		
-	}
+		connectToServer();
 
-	public boolean getSupervisorStatus()
-	{
-		return supervisorStatus;
-	}
-	
-	public void setSupervisorStatus(boolean status)
-	{
-		supervisorStatus = status;
-	}
-	public void displayLogin(String type)
-	{
-		// remove old items
-		getContentPane().removeAll();
-		
-		HomePanel homePanel = new HomePanel(this);
-		homePanel = homePanel.constructLoginWindow(type);
-		getContentPane().add(homePanel);
-		setTitle(type);
-		// refresh frame so that the new changes take effect.
-		revalidate();
+		JPanel p = createLoginPanel();
+		getContentPane().add(p);
 	}
 
-	
-	//login function for authenticating user
+	public void connectToServer() {
+
+		try {
+			socket = new Socket("localhost", 1234);
+			// Used to send Messages to the server
+			// Establish communication channel - to WRITE OUT information (bytes/String).
+			OutputStream outputStream = socket.getOutputStream();
+			// Create WRAPPER communication channel - to WRITE OUT Java Object.
+			objectOutputStream = new ObjectOutputStream(outputStream);
+
+			// This is how you would get a Message back during the authentication process
+			// Establish communication channel - to READ IN information (bytes/String).
+			InputStream inputStream = socket.getInputStream();
+			// Create WRAPPER communication channel - to READ IN Java Object.
+			objectInputStream = new ObjectInputStream(inputStream);
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void sendMessage(String type, String text) {
+
+		Message loginMessage = new Message(type, text);
+		// Write - SEND the message Object to the server.
+		try {
+			objectOutputStream.writeObject(loginMessage);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	private JPanel createLoginPanel() {
+		JPanel p = new JPanel(new GridLayout(3, 3));
+		p.add(new JLabel("User name: "));
+		p.add(usernameTF);
+		p.add(new JLabel("Password: "));
+		p.add(passwordF);
+
+		JButton loginB = new JButton("Login");
+		p.add(loginB);
+
+		loginB.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				String username = usernameTF.getText();
+				char[] passwordChars = passwordF.getPassword();
+				String password = new String(passwordChars);
+
+				login(username, password);
+
+			}
+		});
+
+		return p;
+	}
+
 	protected void login(String username, String password) {
-		
-		
-		client.login(username, password);
-		
-		if (client.getAuthenticated()) {
-			currentUser = username;
-			if(!checkSupervisor())
-			{
-				setSupervisorStatus(false);
-				displayHomeScreen("Login success!");
+		String userinfo = username + "/" + password;
+
+		// send Message with 'LOGIN' as the 'type'
+		sendMessage("LOGIN", userinfo);
+
+		boolean authenticated = false;
+		try {
+			// READ REPLY from the server.
+			Message loginMessage = (Message) objectInputStream.readObject();
+			// Print the REPLY status
+			System.out.println(loginMessage.getStatus());
+			// Print the REPLY text
+			System.out.println(loginMessage.getText());
+
+			// Check if the status is 'successful login'
+			if (loginMessage.getStatus().equals("VERIFIED")) {
+				// login success
+				// Create parallel process (thread) to read/receive message from server.
+//				ReceiveMessages inputThread = new ReceiveMessages(socket, objectInputStream);
+//				new Thread(inputThread).start();		
+				authenticated = true;
+				currentUser = username;
+				displayHomeScreen();
+			} else {
+				// Login failed
+				JOptionPane.showMessageDialog(this, "Login failed.");
 			}
-			else
-			{
-				setSupervisorStatus(true);
-				displaySuperHomeScreen("Super success!");
-			}
-		} else {
-			// Login failed
-			JOptionPane.showMessageDialog(this, "Login failed.");
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		
-		
+
 	}
-	
-	//Sends a RETRIEVEMESSAGE to determine if the user is a supervisor or not
-	private boolean checkSupervisor()
-	{
-		Message replyMessage = client.getChatLog();
-		if(replyMessage.getStatus().equals("VERIFIED"))
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
-	
-	//Creates and displays the main menu
-	public void displayHomeScreen(String displayString) {
+
+	private void displayHomeScreen() {
 		// remove old items
 		getContentPane().removeAll();
 
 		// add home panel
 		homePanel = new HomePanel(this);
-		homePanel = homePanel.constructMainMenu();
 		getContentPane().add(homePanel);
 
 		setTitle("Chat Room: " + currentUser);
@@ -103,417 +142,66 @@ public class ClientGUI extends JFrame {
 		revalidate();
 
 		// set display text
-		homePanel.display(displayString);
+		homePanel.display("Login success!");
 		homePanel.displayLine();
 
 	}
-	
-	//Creates and displays the menu for supervisors
-	public void displaySuperHomeScreen(String displayString)
-	{
-		// remove old items
-		getContentPane().removeAll();
 
-		// add home panel
-		homePanel = new HomePanel(this);
-		homePanel = homePanel.constructSuperWindow();
-		getContentPane().add(homePanel);
-
-		setTitle("Chat Room: " + currentUser);
-		// refresh frame so that the new changes take effect.
-		revalidate();
-
-		// set display text
-		homePanel.display(displayString);
-		homePanel.displayLine();
-
-		
-	}
-	
 	public static void main(String[] args) {
-		
-		Client client = new Client();
-		ClientGUI gui = new ClientGUI(client);
-		
-		//GUI settings
+		ClientGUI gui = new ClientGUI();
 		gui.setSize(800, 500); // setting x and y dim of frame
 		gui.setTitle("Chat Room - Login");
 		gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // exit button to close app
 		gui.setVisible(true);
 	}
 
-	//Functionality for Create Chat Room button in main menu
-	public boolean createChatRoom(String roomName) 
-	{
-		if(roomName == null)
-		{
-			return false;
-		}
-		
-		Message replyMessage = client.createChatroom(roomName);
-		
-		//Created chat room successfully
-		if ("VERIFIED".equals(replyMessage.getStatus())) {
-			client.setCurrRoom(roomName);
-			return true;
+	public void createChatRoom(String roomName) {
 
-		} else {	//Chat room already created
-			homePanel.display("FAILED to Create Chat Room: " + roomName);
-			homePanel.display("Reason: " + replyMessage.getText());
-			homePanel.displayLine();
-			return false;
+		sendMessage("CREATECHATROOM", roomName);
 
-		}
-	
-
-	}
-
-	//Functionality for Join Chat Room button in main menu
-	public Message joinChatRoom(String roomName) {
-		
-		
-		
-		Message replyMessage = client.joinChatroom(roomName);
-
-		return replyMessage;
-
-	}
-	
-	
-	//Functionality for Lock button on chat window
-	public void lockChatRoom()
-	{
-		client.setChatLock();
-
-	}
-	
-	//Functionality for Unlock button on chat window
-	public void unlockChatRoom()
-	{
-		
-		client.setChatUnlock();
-
-	}
-	
-	//Functionality for Change Password button in main menu
-	public void changePassword(String password)
-	{
-		
-		Message replyMessage = client.changePass(password);
-		
-		if ("VERIFIED".equals(replyMessage.getStatus())) {
-			homePanel.display("Password changed");
-			homePanel.displayLine();
-		} else {
-			homePanel.display("Unable to change password");
-			homePanel.displayLine();
-
-		}
-
-	}
-	
-	//Functionality for Display Chat Room button in main menu
-	public void displayChatRooms()
-	{
-		
-		Message replyMessage = client.displayChatRooms();
-		
-		//Continue if verified and the RoomList is not empty 
-		if("VERIFIED".equals(replyMessage.getStatus()) && replyMessage.getRoomList() != null)
-		{	
-			//Loop through the String array in replyMessage
-			for(String s: replyMessage.getRoomList())
-			{
-				homePanel.display(s + "\n");
-			}
-			
-			homePanel.displayLine();
-		}else
-		{
-			homePanel.display("There are no Chat Rooms to show");
-			homePanel.displayLine();
-		}
-				
-	}
-	
-	//Functionality for Display Users button in main menu
-	public void displayUsers()
-	{
-		Message replyMessage = client.displayUsers();
-		System.out.println(replyMessage.getType());
-		//Continue if verified and the RoomList is not empty 
-		if("VERIFIED".equals(replyMessage.getStatus()) && replyMessage.getRoomList() != null)
-		{	
-			//Loop through the String array in replyMessage
-			for(String s: replyMessage.getRoomList())
-			{
-				homePanel.display(s + "\n");
-			}
-			
-			homePanel.displayLine();
-		}else
-		{
-			homePanel.display("There are no users to show");
-			homePanel.displayLine();
-		}
-
-	}
-
-	public void createUser(String username, String password)
-	{
-		System.out.println(username + "/" + password);
-		Message replyMessage = client.createUser(username + "/" + password);
-		
-		if(replyMessage.getStatus().equals("VERIFIED"))
-		{
-			displaySuperHomeScreen("User created!");
-		}
-		else
-		{
-			JOptionPane.showMessageDialog(this, replyMessage.getText());
-		}
-	}
-	
-	public void createSuper(String username, String password)
-	{
-		
-		Message replyMessage = client.createSuper(username + "/" + password);
-		
-		if(replyMessage.getStatus().equals("VERIFIED"))
-		{
-			displaySuperHomeScreen("Supervisor created!");
-		}
-		else
-		{
-			JOptionPane.showMessageDialog(this, replyMessage.getText());
-		}
-	}
-	
-	public void deleteUser(String username)
-	{
-		Message replyMessage = client.deleteUser(username);
-		if(replyMessage.getStatus().equals("VERIFIED"))
-		{
-			homePanel.display(replyMessage.getText());
-		}
-		else
-		{
-			homePanel.display("Unable to delete user.\nReason" + replyMessage.getText());
-		}
-		
-	}
-	
-	public void getLogs()
-	{
-		Message replyMessage = client.getChatLog();
-		if(replyMessage.getStatus().equals("VERIFIED"))
-		{
-			homePanel.display(replyMessage.getText());
-		}
-		else
-		{
-			homePanel.display("Unable to retrieve logs.\nReason" + replyMessage.getText());
-		}
-	}
-	
-	//Function that creates and displays all available chat rooms in a new window
-	public void displayRooms()
-	{
-		Message replyMessage = client.displayChatRooms();
-		// remove old items
-		getContentPane().removeAll();
-		
-		//create a new HomePanel designed for displaying chat rooms
-		homePanel = new HomePanel(this);
-		homePanel = homePanel.constructRoomWindow(replyMessage);
-		
-		getContentPane().add(homePanel);
-		setTitle("Chat Room: " + currentUser);
-		// refresh frame so that the new changes take effect.
-		revalidate();
-
-	}
-	
-	//Function that creates and displays the chat window after selecting a room
-	public void displayChat(String s, boolean firstTime)
-	{
-		
-		// remove old items
-		getContentPane().removeAll();
-		
-		//Create new HomePanel designed for displaying the chat
-		homePanel = new HomePanel(this);
-		homePanel = homePanel.constructChatWindow(s);
-		
-		getContentPane().add(homePanel);
-		setTitle("Chat Room: " + currentUser);
-		// refresh frame so that the new changes take effect.
-		revalidate();
-
-		// set display text
-		homePanel.display(s);
-		homePanel.displayLine();
-		
-		//Start a new thread for listening
-		ReceiveMessages inputThread = new ReceiveMessages(client.getSocket(), client.getObjectInputStream(), homePanel, this);
-		new Thread(inputThread).start();
-		if(!firstTime)
-		{
-			reloadChat();
-		}
-	}
-	
-	//Functionality for the Send button in the chat window
-	public void sendMessage(String s)
-	{
-		client.deliverMessage(s);
-	}
-	
-	//Functionality for Exit button on chat window
-	public void leaveChatRoom(String roomName)
-	{
-		if(roomName == null)
-		{
-			return;
-		}
-		
-		client.leaveChatroom(roomName);
-
-	}
-	
-	public void reloadChat()
-	{
-		client.reloadChat();
-	}
-	
-	public void logOut()
-	{
-		client.logOut();
-	}
-	
-	public String getCurrentUser()
-	{
-		return currentUser;
-	}
-	
-	public void displayChatUsers()
-	{
-		client.displayChatUsers();
-	}
-	
-	//Handles chat threads
-	private static class ReceiveMessages implements Runnable {
-		private final Socket clientSocket;
-        private ObjectInputStream objectInStream;
-		private HomePanel homePanel;
-		private ClientGUI tgui;
-		
-		public ReceiveMessages(Socket socket, ObjectInputStream objectInputStream, HomePanel homeP, ClientGUI tClient) {
-			this.clientSocket = socket;
-            this.objectInStream = objectInputStream;
-            this.homePanel = homeP;
-            this.tgui = tClient;
-			System.out.println("Creating the receive thread...");
-			
-		} 
-
-		public void run() {
 		try {
-			System.out.println("TRYING");
-			Message replyMessage;
-			
-			while (true) {
-				
-				replyMessage = (Message) objectInStream.readObject();
-				
-				if(replyMessage.getType() == null)
-				{
-					continue;
-				}
-				else if(replyMessage.getType().equals("CHATROOM"))
-				{
-					String displayText[] = replyMessage.getText().split("\n");
-					if(!tgui.getCurrentUser().equals(replyMessage.getSender()))
-					{
-						homePanel.display(displayText[0]);
-					}
-					else
-					{
-						homePanel.display(replyMessage.getText());
-					}
-				}
-				else if(replyMessage.getType().equals("LEAVECHATROOM"))
-				{	//If the user clicks the Exit button, end the thread
-					
-					System.out.println("Ending thread");
-					break;
-				} 
-				else if(replyMessage.getType().equals("LOCKCHAT") || replyMessage.getType().equals("UNLOCKCHAT"))//Handle lock/unlock messages
-				{
-					
-					homePanel.display(replyMessage.getText());
-					homePanel.displayLine();
-				
-				}
-				else if(replyMessage.getType().equals("HISTORY"))
-				{
-					
-					homePanel.display(parseHistory(replyMessage.getText(), tgui.getCurrentUser()));
-					homePanel.displayLine();
-				}
-				else if(replyMessage.getType().equals("JOINED"))
-				{
-					homePanel.display(replyMessage.getText());
-					homePanel.displayLine();
-				}
-				else if (replyMessage.getType().equals("CHATUSERS"))
-				{
-					homePanel.display(replyMessage.getText());
-					homePanel.displayLine();
-				}
-				else if(replyMessage.getType().equals("LEFT"))
-				{
-					homePanel.display(replyMessage.getText());
-					homePanel.displayLine();
-				}
-				
-			}
+			Message replyMessage = (Message) objectInputStream.readObject();
+			if ("VERIFIED".equals(replyMessage.getStatus())) {
+				currentRoom = roomName;
+				homePanel.display("CREATED Chat Room: " + roomName);
+				homePanel.displayLine();
 
-			
-		}
-		catch (Exception e) {
+			} else {
+				homePanel.display("FAILED to Create Chat Room: " + roomName);
+				homePanel.display("Reason: " + replyMessage.getText());
+				homePanel.displayLine();
+
+			}
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
+
 	}
-		
-	private String parseHistory(String text, String user)
-	{
-		
-		String sArr[] = text.split("\n([A-z]*)\n");
-		String returnString = "";
-		
-		for(String s : sArr)
-		{
-			
-			String tempArr[] = s.split(":");
-			if(tempArr[0].equals(user))
-			{
-				returnString += s;
-				returnString += "\n";
-			}
-			else
-			{
-				returnString += s.split("\n")[0];
-				returnString += "\n";
-			}
-			
-			
+
+	public void joinChatRoom(String roomName) {
+		if (roomName.equals(currentRoom)) {
+			homePanel.display("You're already in Chat Room: " + roomName);
+			homePanel.displayLine();
+			return;
 		}
-		
-		return returnString;
+		sendMessage("JOINCHATROOM", roomName);
+
+		try {
+			Message replyMessage = (Message) objectInputStream.readObject();
+			if ("VERIFIED".equals(replyMessage.getStatus())) {
+				homePanel.display("JOINED Chat Room: " + roomName);
+				homePanel.displayLine();
+
+			} else {
+				homePanel.display("FAILED to Join Chat Room: " + roomName);
+				homePanel.display("Reason: " + replyMessage.getText());
+				homePanel.displayLine();
+
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 	}
-		
-}
-	
-	
+
 }
