@@ -10,7 +10,8 @@ import org.junit.runners.Suite.SuiteClasses;
 	ServerTester.class,
 	SupervisorTester.class,
 	UserTester.class,
-	ChatroomTester.class
+	ChatroomTester.class,
+	ClientTester.class
 })
 public class AllTests {
 
