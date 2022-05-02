@@ -1,12 +1,7 @@
 import static org.junit.jupiter.api.Assertions.*;
+import org.junit.Test;
 
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-
-import org.junit.jupiter.api.Test;
-
-class UserTester {
+public class UserTester {
 
 	@Test
 	public void testConstructor() {

@@ -4,7 +4,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 public class ChatroomTester {
 
